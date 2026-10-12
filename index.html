@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>格律练习 · 古代汉语（二）</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ========== 首页 ========== -->
+  <section id="page-home" class="page active">
+    <div class="home-wrap">
+      <header class="site-head">
+        <div class="seal">律</div>
+        <h1>格律练习</h1>
+        <p class="sub">古代汉语（二）· 格律考核训练</p>
+      </header>
+      <div class="module-grid">
+        <button class="module-card" data-go="mode">
+          <span class="mc-idx">壹</span>
+          <span class="mc-name">诗句平仄标注</span>
+          <span class="mc-desc">在七言诗上逐字标注平仄<br>限时 3 分钟 · 失误 ≤ 3 字为通过</span>
+          <span class="mc-meta">题库 26 首（建设中）</span>
+        </button>
+        <button class="module-card disabled" data-go="rusheng">
+          <span class="mc-idx">贰</span>
+          <span class="mc-name">入声字判别</span>
+          <span class="mc-desc">从 15 字中识别入声字<br>限时 15 秒 · 零失误</span>
+          <span class="mc-meta">敬请期待</span>
+        </button>
+      </div>
+      <footer class="home-foot">数据源：喻守真《唐诗三百首详析》</footer>
+    </div>
+  </section>
+
+  <!-- ========== 模式选择 ========== -->
+  <section id="page-mode" class="page">
+    <header class="bar">
+      <button class="back" data-go="home">‹ 首页</button>
+      <h2>诗句平仄标注</h2>
+      <span class="bar-spacer"></span>
+    </header>
+    <div class="mode-wrap">
+      <div class="mode-block">
+        <h3>选题专练</h3>
+        <p class="hint">按篇目名称选择对应诗句（长诗仅取部分片段）</p>
+        <div class="select-row">
+          <select id="poemSelect"></select>
+          <button class="btn-primary" id="startByPick">开始练习</button>
+        </div>
+      </div>
+      <div class="mode-block">
+        <h3>随机实战</h3>
+        <p class="hint">从题库中随机抽取一首（或片段）作为题目</p>
+        <button class="btn-primary" id="startRandom">随机抽题</button>
+      </div>
+      <div class="mode-block opt">
+        <label class="switch">
+          <input type="checkbox" id="timedToggle" checked>
+          <span>启用 3 分钟倒计时（模拟考核）</span>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 练习 ========== -->
+  <section id="page-practice" class="page">
+    <header class="bar">
+      <button class="back" id="quitPractice">‹ 退出</button>
+      <h2 id="practiceTitle">—</h2>
+      <span class="timer" id="timer" hidden>03:00</span>
+    </header>
+    <div class="practice-wrap">
+      <p class="practice-sub" id="practiceSub">—</p>
+      <div class="poem" id="poemArea"></div>
+      <p class="legend">
+        <span class="lg"><i class="cell-demo ping"></i>平</span>
+        <span class="lg"><i class="cell-demo ze"></i>仄</span>
+        <span class="lg-hint">点击字下方格子：空 → 平 → 仄 → 空</span>
+      </p>
+      <button class="btn-primary wide" id="submitBtn">提 交</button>
+    </div>
+  </section>
+
+  <!-- ========== 批改结果 ========== -->
+  <section id="page-result" class="page">
+    <header class="bar">
+      <button class="back" data-go="mode">‹ 返回选择</button>
+      <h2>批改结果</h2>
+      <span class="bar-spacer"></span>
+    </header>
+    <div class="result-wrap">
+      <div class="score-card" id="scoreCard"></div>
+      <div class="review" id="reviewArea"></div>
+      <div class="result-actions">
+        <button class="btn-primary" data-go="mode">再练一首</button>
+        <button class="btn-ghost" data-go="home">返回首页</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 弹窗 ========== -->
+  <div class="modal-overlay" id="modal" hidden>
+    <div class="modal" id="modalBox"></div>
+  </div>
+
+</div>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
