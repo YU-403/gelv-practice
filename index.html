@@ -101,10 +101,25 @@
     </div>
   </section>
 
+  <!-- ========== 入声字判别 · 准备（缓冲） ========== -->
+  <section id="page-ruready" class="page">
+    <header class="bar">
+      <button class="back" data-go="home">‹ 首页</button>
+      <h2>入声字判别</h2>
+      <span class="bar-spacer"></span>
+    </header>
+    <div class="ru-ready">
+      <div class="ready-seal">贰</div>
+      <p class="ready-tip">准备好后点击「开始练习」<br>
+        将出现 <b>15 个字</b>，需在 <b>15 秒</b>内点选全部入声字</p>
+      <button class="btn-primary wide" id="ruBegin">开 始 练 习</button>
+    </div>
+  </section>
+
   <!-- ========== 入声字判别 · 练习 ========== -->
   <section id="page-rusheng" class="page">
     <header class="bar">
-      <button class="back" data-go="home">‹ 首页</button>
+      <button class="back" data-go="ruready">‹ 返回</button>
       <h2>入声字判别</h2>
       <span class="timer" id="ruTimer" hidden>15</span>
     </header>
@@ -132,6 +147,7 @@
         <button class="btn-primary" id="ruAgain">再练一组</button>
         <button class="btn-ghost" data-go="home">返回首页</button>
       </div>
+
     </div>
   </section>
 

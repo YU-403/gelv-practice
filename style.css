@@ -187,6 +187,15 @@ select:focus { border-color:var(--gold); }
 .result-actions { display:flex; gap:14px; justify-content:center; margin-top:30px; }
 
 /* ---------- 入声字判别 ---------- */
+.ru-ready { text-align: center; padding-top: 10vh; }
+.ru-ready .ready-seal {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 62px; height: 62px; border: 1.5px solid var(--gold-deep); border-radius: 50%;
+  color: var(--gold-deep); font-family: var(--kai); font-size: 26px; margin-bottom: 26px;
+}
+.ru-ready .ready-tip { color: var(--text-secondary); font-size: 15px; line-height: 2.1; margin-bottom: 40px; }
+.ru-ready .ready-tip b { color: var(--error); font-size: 17px; }
+.ru-ready .btn-primary.wide { max-width: 380px; margin: 0 auto; }
 .ru-wrap { padding-top: 8px; text-align: center; }
 .ru-wrap .practice-sub b { color: var(--error); }
 .ru-grid {

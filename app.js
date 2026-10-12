@@ -22,7 +22,7 @@
   document.querySelectorAll('[data-go]').forEach(function (b) {
     b.addEventListener('click', function () {
       var to = b.getAttribute('data-go');
-      if (to === 'rusheng') { startRusheng(); return; }
+      if (to === 'rusheng') { enterRuReady(); return; }
       go(to);
     });
   });
@@ -335,14 +335,20 @@
     );
   }
 
-  function startRusheng() {
+  function enterRuReady() {
+    if (RU_STATE.timerId) { clearInterval(RU_STATE.timerId); RU_STATE.timerId = null; }
+    go('ruready');          // 缓冲界面：不显示题目、不计时
+  }
+
+  function beginRu() {
     RU_STATE.items = newRuQuestion();
     RU_STATE.sel = RU_STATE.items.map(function () { return false; });
     RU_STATE.result = null;
     renderRu();
-    startRuTimer();
-    go('rusheng');
+    go('rusheng');          // 切到练习页（此时才显示题目）
+    startRuTimer();         // 看到题目即开始 15 秒计时
   }
+  el('ruBegin').addEventListener('click', beginRu);
 
   function renderRu() {
     var g = el('ruGrid');
@@ -373,9 +379,18 @@
 
   el('ruSubmit').addEventListener('click', function () {
     var anySel = RU_STATE.sel.some(function (s) { return s; });
-    confirmModal('确认提交？', anySel ? '将立即批改本次作答。' : '尚未选择任何字，提交后将判为全错。', '提交', function () {
-      gradeRu();
-    });
+    if (!anySel) {
+      pauseActiveTimer();     // 提示期间暂停计时
+      showModal('<h3>提示</h3><p>未判别出任何入声字，请确认。</p>' +
+        '<div class="actions"><button class="btn-ghost" data-x="back">返回练习</button>' +
+        '<button class="btn-primary" data-x="go">坚持提交</button></div>',
+        function (x) {
+          if (x === 'back') { hideModal(); resumeActiveTimer(); }
+          else { hideModal(); gradeRu(); }
+        });
+      return;
+    }
+    confirmModal('确认提交？', '将立即批改本次作答。', '提交', function () { gradeRu(); });
   });
 
   function gradeRu() {
@@ -430,7 +445,7 @@
     area.appendChild(box);
   }
 
-  el('ruAgain').addEventListener('click', startRusheng);
+  el('ruAgain').addEventListener('click', enterRuReady);   // 回到缓冲界面
 
   /* ---------- 初始化 ---------- */
   fillSelect();
