@@ -56,8 +56,8 @@
     el('practiceTitle').textContent = poem.title;
     el('practiceSub').textContent = poem.author + ' · ' + poem.category + ' · ' + poem.lines.length + ' 句';
     renderPoem();
-    startTimerIfNeeded();
-    go('practice');
+    go('practice');          // 先切页（go 会清掉上一题的计时器）
+    startTimerIfNeeded();    // 再启动本题计时
   }
 
   el('startByPick').addEventListener('click', function () {
@@ -113,14 +113,7 @@
     state.left = 180;
     tEl.hidden = false;
     updateTimer();
-    state.timerId = setInterval(function () {
-      state.left--;
-      updateTimer();
-      if (state.left <= 0) {
-        clearInterval(state.timerId); state.timerId = null;
-        alertModal('练习结束', '倒计时已结束，将强制提交并批改。', '查看结果', function () { doGrade(); });
-      }
-    }, 1000);
+    resumeTimer();
   }
   function updateTimer() {
     var m = Math.floor(state.left / 60), s = state.left % 60;
@@ -238,21 +231,23 @@
 
   /* ---------- 弹窗 ---------- */
   function confirmModal(title, msg, okText, onOk) {
+    pauseActiveTimer();   // 弹窗期间暂停计时
     showModal('<h3>' + title + '</h3>' + (msg ? '<p>' + msg + '</p>' : '') +
       '<div class="actions"><button class="btn-ghost" data-x="cancel">取消</button>' +
       '<button class="btn-primary" data-x="ok">' + okText + '</button></div>',
       function (x) {
         if (x === 'ok') { hideModal(); onOk(); }
-        else if (x === 'cancel') { hideModal(); /* 取消 → 继续练习计时 */ resumeTimerIfNeeded(); }
+        else if (x === 'cancel') { hideModal(); resumeActiveTimer(); }  // 取消 → 从剩余时间继续
       });
   }
   function alertModal(title, msg, okText, onOk, cancelText) {
+    pauseActiveTimer();
     var html = '<h3>' + title + '</h3>' + (msg ? '<p>' + msg + '</p>' : '') + '<div class="actions">';
     if (cancelText) html += '<button class="btn-ghost" data-x="cancel">' + cancelText + '</button>';
     html += '<button class="btn-primary" data-x="ok">' + okText + '</button></div>';
     showModal(html, function (x) {
       if (x === 'ok') { hideModal(); if (onOk) onOk(); }
-      else if (x === 'cancel') { hideModal(); resumeTimerIfNeeded(); }
+      else if (x === 'cancel') { hideModal(); resumeActiveTimer(); }
     });
   }
   function showModal(html, cb) {
@@ -265,13 +260,41 @@
   }
   function hideModal() { el('modal').hidden = true; el('modalBox').innerHTML = ''; }
 
-  // 提交弹窗取消 → 继续计时
-  var origSubmit = true;
-  function resumeTimerIfNeeded() {
+  // ---- 计时暂停 / 恢复（按当前练习页分派；弹窗期间暂停）----
+  function activePage() { var p = document.querySelector('.page.active'); return p ? p.id : ''; }
+  function pauseActiveTimer() {
+    if (activePage() === 'page-practice') {
+      if (state.timerId) { clearInterval(state.timerId); state.timerId = null; }
+    } else if (activePage() === 'page-rusheng') {
+      if (RU_STATE.timerId) { clearInterval(RU_STATE.timerId); RU_STATE.timerId = null; }
+    }
+  }
+  function resumeActiveTimer() {
+    if (activePage() === 'page-practice') resumeTimer();
+    else if (activePage() === 'page-rusheng') resumeRuTimer();
+  }
+  function resumeTimer() {
     if (state.timed && !state.timerId && state.left > 0 && !state.result) {
       state.timerId = setInterval(function () {
         state.left--; updateTimer();
-        if (state.left <= 0) { clearInterval(state.timerId); state.timerId = null; doGrade(); }
+        if (state.left <= 0) {
+          clearInterval(state.timerId); state.timerId = null;
+          alertModal('练习结束', '倒计时已结束，将强制提交并批改。', '查看结果', function () { doGrade(); });
+        }
+      }, 1000);
+    }
+  }
+  function resumeRuTimer() {
+    if (!RU_STATE.timerId && RU_STATE.left > 0 && !RU_STATE.result) {
+      RU_STATE.timerId = setInterval(function () {
+        RU_STATE.left--;
+        var tEl = el('ruTimer');
+        tEl.textContent = (RU_STATE.left < 10 ? '0' : '') + RU_STATE.left;
+        tEl.classList.toggle('warn', RU_STATE.left <= 5);
+        if (RU_STATE.left <= 0) {
+          clearInterval(RU_STATE.timerId); RU_STATE.timerId = null;
+          alertModal('练习结束', '倒计时已结束，将强制提交并批改。', '查看结果', function () { gradeRu(); });
+        }
       }, 1000);
     }
   }
@@ -340,20 +363,12 @@
 
   function startRuTimer() {
     var tEl = el('ruTimer');
-    if (RU_STATE.timerId) clearInterval(RU_STATE.timerId);
+    if (RU_STATE.timerId) { clearInterval(RU_STATE.timerId); RU_STATE.timerId = null; }
     RU_STATE.left = 15;
     tEl.hidden = false;
     tEl.textContent = '15';
     tEl.classList.remove('warn');
-    RU_STATE.timerId = setInterval(function () {
-      RU_STATE.left--;
-      tEl.textContent = (RU_STATE.left < 10 ? '0' : '') + RU_STATE.left;
-      tEl.classList.toggle('warn', RU_STATE.left <= 5);
-      if (RU_STATE.left <= 0) {
-        clearInterval(RU_STATE.timerId); RU_STATE.timerId = null;
-        alertModal('练习结束', '倒计时已结束，将强制提交并批改。', '查看结果', function () { gradeRu(); });
-      }
-    }, 1000);
+    resumeRuTimer();
   }
 
   el('ruSubmit').addEventListener('click', function () {
