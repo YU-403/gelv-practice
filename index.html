@@ -24,11 +24,11 @@
           <span class="mc-desc">在七言诗上逐字标注平仄<br>限时 3 分钟 · 失误 ≤ 3 字为通过</span>
           <span class="mc-meta">题库 26 首（建设中）</span>
         </button>
-        <button class="module-card disabled" data-go="rusheng">
+        <button class="module-card" data-go="rusheng">
           <span class="mc-idx">贰</span>
           <span class="mc-name">入声字判别</span>
           <span class="mc-desc">从 15 字中识别入声字<br>限时 15 秒 · 零失误</span>
-          <span class="mc-meta">敬请期待</span>
+          <span class="mc-meta">题库 175 常用入声字</span>
         </button>
       </div>
       <footer class="home-foot">数据源：喻守真《唐诗三百首详析》</footer>
@@ -96,6 +96,40 @@
       <div class="review" id="reviewArea"></div>
       <div class="result-actions">
         <button class="btn-primary" data-go="mode">再练一首</button>
+        <button class="btn-ghost" data-go="home">返回首页</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 入声字判别 · 练习 ========== -->
+  <section id="page-rusheng" class="page">
+    <header class="bar">
+      <button class="back" data-go="home">‹ 首页</button>
+      <h2>入声字判别</h2>
+      <span class="timer" id="ruTimer" hidden>15</span>
+    </header>
+    <div class="ru-wrap">
+      <p class="practice-sub">下列 15 个字中，点选<b>全部入声字</b></p>
+      <div class="ru-grid" id="ruGrid"></div>
+      <p class="legend">
+        <span class="lg-hint">点击字块：选中 / 取消</span>
+      </p>
+      <button class="btn-primary wide" id="ruSubmit">提 交</button>
+    </div>
+  </section>
+
+  <!-- ========== 入声字判别 · 批改 ========== -->
+  <section id="page-ruresult" class="page">
+    <header class="bar">
+      <button class="back" data-go="home">‹ 返回首页</button>
+      <h2>批改结果</h2>
+      <span class="bar-spacer"></span>
+    </header>
+    <div class="result-wrap">
+      <div class="score-card" id="ruScore"></div>
+      <div class="review" id="ruReview"></div>
+      <div class="result-actions">
+        <button class="btn-primary" id="ruAgain">再练一组</button>
         <button class="btn-ghost" data-go="home">返回首页</button>
       </div>
     </div>

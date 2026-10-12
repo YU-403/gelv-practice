@@ -22,7 +22,7 @@
   document.querySelectorAll('[data-go]').forEach(function (b) {
     b.addEventListener('click', function () {
       var to = b.getAttribute('data-go');
-      if (to === 'rusheng') { toast('「入声字判别」模块开发中，敬请期待'); return; }
+      if (to === 'rusheng') { startRusheng(); return; }
       go(to);
     });
   });
@@ -285,6 +285,137 @@
     requestAnimationFrame(function () { t.style.opacity = '1'; });
     setTimeout(function () { t.style.opacity = '0'; setTimeout(function () { t.remove(); }, 300); }, 1800);
   }
+
+  /* ============================================================
+     入声字判别
+     ============================================================ */
+  var RU_STATE = { items: [], sel: [], timerId: null, left: 15, result: null };
+
+  function shuffle(a) {
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  function newRuQuestion() {
+    var pool = (DATA.ruPool || []).slice();
+    var fe = (DATA.feiruPool || []).slice();
+    var n = 3 + Math.floor(Math.random() * 10);        // 3–12 个入声字
+    n = Math.min(n, pool.length, 15);
+    var ru = shuffle(pool).slice(0, n);
+    var rest = shuffle(fe).slice(0, 15 - n);
+    return shuffle(
+      ru.map(function (c) { return { c: c, ru: true }; })
+        .concat(rest.map(function (c) { return { c: c, ru: false }; }))
+    );
+  }
+
+  function startRusheng() {
+    RU_STATE.items = newRuQuestion();
+    RU_STATE.sel = RU_STATE.items.map(function () { return false; });
+    RU_STATE.result = null;
+    renderRu();
+    startRuTimer();
+    go('rusheng');
+  }
+
+  function renderRu() {
+    var g = el('ruGrid');
+    g.innerHTML = '';
+    RU_STATE.items.forEach(function (it, i) {
+      var d = document.createElement('button');
+      d.className = 'ru-ch';
+      d.textContent = it.c;
+      d.dataset.i = i;
+      d.addEventListener('click', function () {
+        if (RU_STATE.result) return;
+        RU_STATE.sel[i] = !RU_STATE.sel[i];
+        d.classList.toggle('selected', RU_STATE.sel[i]);
+      });
+      g.appendChild(d);
+    });
+  }
+
+  function startRuTimer() {
+    var tEl = el('ruTimer');
+    if (RU_STATE.timerId) clearInterval(RU_STATE.timerId);
+    RU_STATE.left = 15;
+    tEl.hidden = false;
+    tEl.textContent = '15';
+    tEl.classList.remove('warn');
+    RU_STATE.timerId = setInterval(function () {
+      RU_STATE.left--;
+      tEl.textContent = (RU_STATE.left < 10 ? '0' : '') + RU_STATE.left;
+      tEl.classList.toggle('warn', RU_STATE.left <= 5);
+      if (RU_STATE.left <= 0) {
+        clearInterval(RU_STATE.timerId); RU_STATE.timerId = null;
+        alertModal('练习结束', '倒计时已结束，将强制提交并批改。', '查看结果', function () { gradeRu(); });
+      }
+    }, 1000);
+  }
+
+  el('ruSubmit').addEventListener('click', function () {
+    var anySel = RU_STATE.sel.some(function (s) { return s; });
+    confirmModal('确认提交？', anySel ? '将立即批改本次作答。' : '尚未选择任何字，提交后将判为全错。', '提交', function () {
+      gradeRu();
+    });
+  });
+
+  function gradeRu() {
+    if (RU_STATE.timerId) { clearInterval(RU_STATE.timerId); RU_STATE.timerId = null; }
+    var miss = [], extra = [];
+    RU_STATE.items.forEach(function (it, i) {
+      if (it.ru && !RU_STATE.sel[i]) miss.push(it.c);
+      if (!it.ru && RU_STATE.sel[i]) extra.push(it.c);
+    });
+    var errs = miss.length + extra.length;
+    RU_STATE.result = { miss: miss, extra: extra, pass: errs === 0, n: errs };
+    markRu();
+    alertModal(RU_STATE.result.pass ? '通过' : '未通过',
+      '共 ' + RU_STATE.items.length + ' 字，失误 <b>' + errs + '</b> 个。' +
+      (RU_STATE.result.pass ? '零失误，达到通过标准。' : '未达零失误标准。'),
+      '查看批改', function () { renderRuResult(); go('ruresult'); });
+  }
+
+  function markRu() {
+    document.querySelectorAll('#ruGrid .ru-ch').forEach(function (d) {
+      var i = +d.dataset.i;
+      var ok = (RU_STATE.items[i].ru === RU_STATE.sel[i]);
+      d.classList.add(ok ? 'correct' : 'wrong');
+    });
+  }
+
+  function renderRuResult() {
+    var r = RU_STATE.result;
+    el('ruScore').innerHTML =
+      '<div class="verdict ' + (r.pass ? 'pass' : 'fail') + '">' + (r.pass ? '通 过' : '未通过') + '</div>' +
+      '<div class="detail">共 15 字 · 失误 <b>' + r.n + '</b> 个<br>' +
+      '<span style="font-size:13px;color:var(--text-light)">通过标准：零失误</span></div>';
+    var area = el('ruReview');
+    area.innerHTML = '';
+    if (r.n === 0) {
+      area.innerHTML = '<div class="rline" style="text-align:center;color:var(--success)">全部判断正确，零失误。</div>';
+      return;
+    }
+    var box = document.createElement('div');
+    box.className = 'rline';
+    var errs = document.createElement('div');
+    errs.className = 'errs';
+    r.miss.forEach(function (c) {
+      errs.innerHTML += '<div class="err-item"><span class="c">' + c + '</span>是<b>入声字</b>（仄），你漏选了' +
+        '<span class="type">今读平声，易误判</span></div>';
+    });
+    r.extra.forEach(function (c) {
+      errs.innerHTML += '<div class="err-item"><span class="c">' + c + '</span>不是入声字，你误选了' +
+        '<span class="type">一般平仄</span></div>';
+    });
+    box.appendChild(errs);
+    area.appendChild(box);
+  }
+
+  el('ruAgain').addEventListener('click', startRusheng);
 
   /* ---------- 初始化 ---------- */
   fillSelect();
