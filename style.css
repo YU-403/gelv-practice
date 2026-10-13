@@ -27,6 +27,8 @@
   --serif: "Noto Serif SC","Source Han Serif SC","Songti SC","STSong","SimSun",serif;
   --kai: "Kaiti SC","STKaiti","KaiTi",serif;
   --sans: "Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  --fang: "FangSong","STFangsong","仿宋",serif;          /* 仿宋：解析/注释 */
+  --li: "LiSu","STLiti","隶书",var(--kai);               /* 隶书：印章/序号 */
   --corner: color-mix(in srgb, var(--gold) 55%, transparent);
   --corner-2: color-mix(in srgb, var(--gold) 30%, transparent);
 }
@@ -66,7 +68,7 @@ body::before {
 .site-head .seal {
   display:inline-flex; align-items:center; justify-content:center;
   width:56px; height:56px; border:1.5px solid var(--error); border-radius:50%;
-  color:var(--error); font-family:var(--kai); font-size:26px; margin-bottom:18px;
+  color:var(--error); font-family:var(--li); font-size:26px; margin-bottom:18px;
 }
 .site-head h1 { font-family:var(--kai); font-size:38px; font-weight:400; letter-spacing:.2em; text-indent:.2em; color:var(--text-primary); }
 .site-head .sub { color:var(--text-light); font-size:14px; letter-spacing:.16em; margin-top:10px; }
@@ -105,7 +107,7 @@ body::before {
 .module-card.disabled:hover::before { opacity:0; }
 .mc-idx {
   position:absolute; top:12px; right:12px;
-  font-family:var(--sans); font-size:12px; font-weight:600; color:var(--accent-dark);
+  font-family:var(--li); font-size:13px; color:var(--accent-dark);
   background:var(--accent-light); padding:2px 10px; border-radius:10px;
 }
 .mc-icon { display:block; font-size:34px; line-height:1; margin-bottom:14px; }
@@ -120,7 +122,7 @@ body::before {
   border-bottom:1px solid var(--border-light); margin-bottom:20px; position:sticky; top:0;
   background: color-mix(in srgb, var(--bg-page) 88%, transparent); backdrop-filter: blur(6px); z-index:20;
 }
-.bar h2 { font-family:var(--kai); font-size:19px; font-weight:400; letter-spacing:.08em; }
+.bar h2 { font-family:var(--sans); font-size:19px; font-weight:700; letter-spacing:.06em; }
 .bar-spacer { flex:1; }
 .back { font-family:inherit; font-size:14px; color:var(--accent); background:none; border:none; cursor:pointer; padding:6px 8px; border-radius:8px; }
 .back:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
@@ -147,7 +149,7 @@ body::before {
   position:relative;
 }
 .mode-block:has(.picker.open) { z-index:30; }
-.mode-block h3 { font-family:var(--kai); font-size:17px; font-weight:400; color:var(--accent-dark); margin-bottom:6px; }
+.mode-block h3 { font-family:var(--sans); font-size:17px; font-weight:700; color:var(--accent-dark); margin-bottom:6px; }
 .mode-block h3::before { content:''; display:inline-block; width:3px; height:14px; background:var(--error); border-radius:2px; margin-right:9px; vertical-align:-1px; }
 .mode-block .hint { color:var(--text-light); font-size:13px; margin-bottom:14px; }
 .mode-block.opt { padding:14px 22px; }
@@ -257,7 +259,7 @@ select:focus { border-color:var(--gold); }
 .score-card {
   background:var(--bg-card); border:1px solid var(--border-light); border-radius:14px; padding:30px; text-align:center; box-shadow:var(--shadow);
 }
-.score-card .verdict { font-family:var(--kai); font-size:34px; letter-spacing:.1em; }
+.score-card .verdict { font-family:var(--sans); font-weight:800; font-size:34px; letter-spacing:.14em; }
 .score-card .verdict.pass { color:var(--success); }
 .score-card .verdict.fail { color:var(--error); }
 .score-card .detail { margin-top:14px; color:var(--text-secondary); font-size:15px; line-height:2; }
@@ -266,7 +268,7 @@ select:focus { border-color:var(--gold); }
 .review .rline { background:var(--bg-card); border:1px solid var(--border-light); border-radius:10px; padding:16px 18px; }
 .review .rline .tag { font-family:var(--sans); font-size:12px; color:var(--gold-ink); background:var(--gold-light); padding:2px 10px; border-radius:8px; }
 .review .rline .errs { margin-top:12px; display:flex; flex-direction:column; gap:8px; }
-.err-item { font-size:14px; color:var(--text-secondary); }
+.err-item { font-family:var(--fang); font-size:14.5px; color:var(--text-secondary); }
 .err-item .c { font-family:var(--kai); font-size:20px; color:var(--text-primary); margin:0 4px; }
 .err-item .you { color:var(--error); }
 .err-item .right { color:var(--success); }
@@ -327,7 +329,7 @@ select:focus { border-color:var(--gold); }
 .ru-ready .ready-seal {
   display: inline-flex; align-items: center; justify-content: center;
   width: 62px; height: 62px; border: 1.5px solid var(--gold-deep); border-radius: 50%;
-  color: var(--gold-deep); font-family: var(--kai); font-size: 26px; margin-bottom: 26px;
+  color: var(--gold-deep); font-family: var(--li); font-size: 26px; margin-bottom: 26px;
 }
 .ru-ready .ready-tip { color: var(--text-secondary); font-size: 15px; line-height: 2.1; margin-bottom: 40px; }
 .ru-ready .ready-tip b { color: var(--error); font-size: 17px; }
