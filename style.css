@@ -271,6 +271,15 @@ select:focus { border-color:var(--gold); }
   position:absolute; top:calc(100% + 1px); left:50%; transform:translateX(-50%);
   font-family:var(--sans); font-size:10px; color:var(--error); white-space:nowrap; letter-spacing:.02em;
 }
+/* ② 古仄今平：下标，无论对错都显示（绿=答对 / 红=答错） */
+.review-poem .trap-ref {
+  position:absolute; top:calc(100% + 1px); left:50%; transform:translateX(-50%);
+  font-family:var(--sans); font-size:10px; white-space:nowrap; letter-spacing:.02em;
+  padding:0 3px; border-radius:3px;
+}
+.review-poem .trap-ref.ok  { color:var(--success); background:var(--success-bg); }
+.review-poem .trap-ref.bad { color:var(--error);   background:var(--error-bg); }
+.review-legend .lg-trap { font-family:var(--sans); font-size:12px; color:var(--text-light); }
 /* 未标：灰虚线框 + 小号灰「空」 */
 .review-poem .cell.blank {
   border-style:dashed; border-color:var(--text-light); color:var(--text-light);

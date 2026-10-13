@@ -5,6 +5,7 @@
   'use strict';
   var DATA = window.GELV_DATA || { poems: [], rusheng: [] };
   var RU = new Set(DATA.rusheng || []);
+  var RU_TRAP = new Set(DATA.ruPool || []);   // ② 古仄今平：今读平声的入声字
 
   var el = function (id) { return document.getElementById(id); };
   var state = {
@@ -214,7 +215,7 @@
 
   /* ---------- 批改 ---------- */
   function classify(ch, user, right) {
-    if (RU.has(ch)) return '入声字（仄声），易误读为平';
+    if (RU_TRAP.has(ch)) return '入声字（仄声），今读平声，易误读为平';
     return '一般平仄';
   }
 
@@ -270,7 +271,8 @@
     legend.innerHTML =
       '<span class="lg"><i class="rv i-ok"></i>标对</span>' +
       '<span class="lg"><i class="rv i-bad"></i>标错</span>' +
-      '<span class="lg"><i class="rv i-blank"></i>未标</span>';
+      '<span class="lg"><i class="rv i-blank"></i>未标</span>' +
+      '<span class="lg lg-trap">下标「古仄今平」＝易误判字</span>';
     area.appendChild(legend);
 
     var errSet = {};
@@ -286,21 +288,27 @@
         var right = line.tones[ci];
         var user = state.answers[li][ci];               // 本人作答：'' / '○' / '●'
         var e = errSet[li + '-' + ci];
+        var trap = RU_TRAP.has(ch);                     // ② 古仄今平
         if (user === '') {                              // 未标：灰虚线 + 「空」
           cell.classList.add('blank');
           cell.textContent = '空';
         } else {
           cell.textContent = user;                      // 格子=我的作答
         }
+        var label = null;
         if (!e) {
           if (user !== '') cell.classList.add('correct');       // 绿：标对
-          wrap.appendChild(zi); wrap.appendChild(cell);
+          if (trap) label = { t: '古仄今平', cls: 'trap-ref ok' };
         } else {
           if (user !== '') cell.classList.add('wrong');         // 红：标错
+          if (trap) label = { t: '古仄今平', cls: 'trap-ref bad' };
+          else label = { t: '应为' + (right === '○' ? '平' : '仄'), cls: 'ans-ref' };
+        }
+        wrap.appendChild(zi); wrap.appendChild(cell);
+        if (label) {
           var ref = document.createElement('span');
-          ref.className = 'ans-ref';
-          ref.textContent = '应为' + (right === '○' ? '平' : '仄');   // 框下小字=正确答案
-          wrap.appendChild(zi); wrap.appendChild(cell); wrap.appendChild(ref);
+          ref.className = label.cls; ref.textContent = label.t;
+          wrap.appendChild(ref);
         }
         div.appendChild(wrap);
       });
