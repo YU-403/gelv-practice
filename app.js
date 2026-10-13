@@ -44,6 +44,7 @@
   })();
   var RU = new Set(DATA.rusheng || []);
   var RU_TRAP = new Set(DATA.ruPool || []);   // ② 古仄今平：今读平声的入声字
+  var RU_DUAL = new Set(DATA.ruDual || []);   // 两读字（另有非入声读法）
 
   var el = function (id) { return document.getElementById(id); };
   var state = {
@@ -694,6 +695,12 @@
         b.className = 'ru-badge'; b.textContent = tag;
         d.appendChild(b);
       }
+      if (RU_DUAL.has(it.c)) {                 // 两读字：额外加角标
+        d.classList.add('dual');
+        var db = document.createElement('span');
+        db.className = 'ru-badge dual-badge'; db.textContent = '两读';
+        d.appendChild(db);
+      }
       g.appendChild(d);
     });
     // 整块淡入（逐格会与 correct-glow 冲突）+ 错块一次性高亮
@@ -715,22 +722,33 @@
     area.innerHTML = '';
     if (r.n === 0) {
       area.innerHTML = '<div class="rline" style="text-align:center;color:var(--success)">全部判断正确，零失误。</div>';
-      return;
+    } else {
+      var box = document.createElement('div');
+      box.className = 'rline';
+      var errs = document.createElement('div');
+      errs.className = 'errs';
+      r.miss.forEach(function (c) {
+        errs.innerHTML += '<div class="err-item"><span class="c">' + c + '</span>是<b>入声字</b>（仄），你漏选了' +
+          '<span class="type">今读平声，易误判</span></div>';
+      });
+      r.extra.forEach(function (c) {
+        errs.innerHTML += '<div class="err-item"><span class="c">' + c + '</span>不是入声字，你误选了' +
+          '<span class="type">一般平仄</span></div>';
+      });
+      box.appendChild(errs);
+      area.appendChild(box);
     }
-    var box = document.createElement('div');
-    box.className = 'rline';
-    var errs = document.createElement('div');
-    errs.className = 'errs';
-    r.miss.forEach(function (c) {
-      errs.innerHTML += '<div class="err-item"><span class="c">' + c + '</span>是<b>入声字</b>（仄），你漏选了' +
-        '<span class="type">今读平声，易误判</span></div>';
-    });
-    r.extra.forEach(function (c) {
-      errs.innerHTML += '<div class="err-item"><span class="c">' + c + '</span>不是入声字，你误选了' +
-        '<span class="type">一般平仄</span></div>';
-    });
-    box.appendChild(errs);
-    area.appendChild(box);
+    // 本轮出现的两读字：无论对错都说明（另有非入声读法，按口径仍算入声）
+    var dual = RU_STATE.items.filter(function (it) { return it.ru && RU_DUAL.has(it.c); })
+      .map(function (it) { return it.c; });
+    if (dual.length) {
+      var dn = document.createElement('div');
+      dn.className = 'rline dual-note';
+      dn.innerHTML = '<span class="tag">两读字</span>' +
+        '<div class="dual-body"><b>' + dual.join('、') + '</b> 既有入声读法，也有非入声读法；' +
+        '本练习按「<b>有入声读法即算入声</b>」判定，故应选入声（仄）。</div>';
+      area.appendChild(dn);
+    }
   }
 
   el('ruAgain').addEventListener('click', enterRuReady);   // 回到缓冲界面

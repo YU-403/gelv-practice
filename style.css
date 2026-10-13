@@ -351,6 +351,14 @@ select:focus { border-color:var(--gold); }
   color:#fff; background:var(--error);
 }
 .ru-ch.correct .ru-badge { background:var(--success); }
+/* 两读字：左上角标记（与右上角对错角标错开位置） */
+.ru-ch.dual .dual-badge {
+  top:-7px; right:auto; left:-7px;
+  background:var(--gold-deep); color:#fff; font-weight:600; font-size:10px;
+}
+/* 两读字说明段 */
+.dual-note .dual-body { margin-top:12px; font-family:var(--fang); font-size:14.5px; line-height:1.9; color:var(--text-secondary); }
+.dual-note .dual-body b { color:var(--gold-ink); }
 
 /* ---------- 入声字判别 ---------- */
 .ru-ready { text-align: center; padding-top: 10vh; }
