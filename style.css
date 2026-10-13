@@ -67,8 +67,10 @@ body::before {
 .site-head { text-align:center; margin-bottom: 44px; }
 .site-head .seal {
   display:inline-flex; align-items:center; justify-content:center;
-  width:56px; height:56px; border:1.5px solid var(--error); border-radius:50%;
-  color:var(--error); font-family:var(--li); font-size:26px; margin-bottom:18px;
+  width:56px; height:56px; border-radius:50%;
+  background:var(--error); color:var(--bg-card);
+  font-family:var(--li); font-size:26px; margin-bottom:18px;
+  box-shadow:0 3px 10px color-mix(in srgb, var(--error) 30%, transparent);
 }
 .site-head h1 { font-family:var(--kai); font-size:38px; font-weight:400; letter-spacing:.2em; text-indent:.2em; color:var(--text-primary); }
 .site-head .sub { color:var(--text-light); font-size:14px; letter-spacing:.16em; margin-top:10px; }
@@ -328,8 +330,10 @@ select:focus { border-color:var(--gold); }
 .ru-ready { text-align: center; padding-top: 10vh; }
 .ru-ready .ready-seal {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 62px; height: 62px; border: 1.5px solid var(--gold-deep); border-radius: 50%;
-  color: var(--gold-deep); font-family: var(--li); font-size: 26px; margin-bottom: 26px;
+  width: 62px; height: 62px; border-radius: 50%;
+  background: var(--gold); color: var(--text-primary);
+  font-family: var(--li); font-size: 26px; margin-bottom: 26px;
+  box-shadow: 0 3px 12px color-mix(in srgb, var(--gold) 40%, transparent);
 }
 .ru-ready .ready-tip { color: var(--text-secondary); font-size: 15px; line-height: 2.1; margin-bottom: 40px; }
 .ru-ready .ready-tip b { color: var(--error); font-size: 17px; }
