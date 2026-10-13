@@ -287,43 +287,53 @@
 
     var errSet = {};
     state.result.errors.forEach(function (e) { errSet[e.li + '-' + e.ci] = e; });
-    state.poem.lines.forEach(function (line, li) {
-      var div = document.createElement('div');
-      div.className = 'line';
-      line.chars.forEach(function (ch, ci) {
-        var wrap = document.createElement('div');
-        wrap.className = 'ch';
-        var zi = document.createElement('span'); zi.className = 'zi'; zi.textContent = ch;
-        var cell = document.createElement('div'); cell.className = 'cell';
-        var right = line.tones[ci];
-        var user = state.answers[li][ci];               // 本人作答：'' / '○' / '●'
-        var e = errSet[li + '-' + ci];
-        var trap = RU_TRAP.has(ch);                     // ② 古仄今平
-        if (user === '') {                              // 未标：灰虚线 + 「空」
-          cell.classList.add('blank');
-          cell.textContent = '空';
-        } else {
-          cell.textContent = user;                      // 格子=我的作答
-        }
-        var label = null;
-        if (!e) {
-          if (user !== '') cell.classList.add('correct');       // 绿：标对
-          if (trap) label = { t: '古仄今平', cls: 'trap-ref ok' };
-        } else {
-          if (user !== '') cell.classList.add('wrong');         // 红：标错
-          if (trap) label = { t: '古仄今平', cls: 'trap-ref bad' };
-          else label = { t: '应为' + (right === '○' ? '平' : '仄'), cls: 'ans-ref' };
-        }
-        wrap.appendChild(zi); wrap.appendChild(cell);
-        if (label) {
-          var ref = document.createElement('span');
-          ref.className = label.cls; ref.textContent = label.t;
-          wrap.appendChild(ref);
-        }
-        div.appendChild(wrap);
-      });
-      area.appendChild(div);
-    });
+    var lines = state.poem.lines;
+    // 一联一行：每 2 句为一行，与练习页一致
+    for (var k = 0; k < lines.length; k += 2) {
+      var row = document.createElement('div');
+      row.className = 'line couplet';
+      for (var h = 0; h < 2; h++) {
+        var li = k + h;
+        var line = lines[li];
+        if (!line) break;
+        var half = document.createElement('div');
+        half.className = 'half';
+        line.chars.forEach(function (ch, ci) {
+          var wrap = document.createElement('div');
+          wrap.className = 'ch';
+          var zi = document.createElement('span'); zi.className = 'zi'; zi.textContent = ch;
+          var cell = document.createElement('div'); cell.className = 'cell';
+          var right = line.tones[ci];
+          var user = state.answers[li][ci];               // 本人作答：'' / '○' / '●'
+          var e = errSet[li + '-' + ci];
+          var trap = RU_TRAP.has(ch);                     // ② 古仄今平
+          if (user === '') {                              // 未标：灰虚线 + 「空」
+            cell.classList.add('blank');
+            cell.textContent = '空';
+          } else {
+            cell.textContent = user;                      // 格子=我的作答
+          }
+          var label = null;
+          if (!e) {
+            if (user !== '') cell.classList.add('correct');       // 绿：标对
+            if (trap) label = { t: '古仄今平', cls: 'trap-ref ok' };
+          } else {
+            if (user !== '') cell.classList.add('wrong');         // 红：标错
+            if (trap) label = { t: '古仄今平', cls: 'trap-ref bad' };
+            else label = { t: '应为' + (right === '○' ? '平' : '仄'), cls: 'ans-ref' };
+          }
+          wrap.appendChild(zi); wrap.appendChild(cell);
+          if (label) {
+            var ref = document.createElement('span');
+            ref.className = label.cls; ref.textContent = label.t;
+            wrap.appendChild(ref);
+          }
+          half.appendChild(wrap);
+        });
+        row.appendChild(half);
+      }
+      area.appendChild(row);
+    }
   }
 
   function renderResult() {

@@ -277,6 +277,8 @@ select:focus { border-color:var(--gold); }
 /* 平仄：全篇逐字对照（绿=正确、红=错误，误处下方小字显示你的作答） */
 .review-poem { display:flex; flex-direction:column; gap:30px; margin-top:22px; align-items:center; }
 .review-poem .line { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; }
+.review-poem .line.couplet { column-gap:30px; row-gap:26px; }
+.review-poem .line.couplet .half { display:flex; gap:6px; }
 .review-poem .ch { position:relative; display:flex; flex-direction:column; align-items:center; gap:4px; }
 .review-poem .cell { cursor:default; }
 .review-poem .ans-ref {
