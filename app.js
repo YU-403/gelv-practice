@@ -49,6 +49,78 @@
 
   function findPoem(id) { return DATA.poems.find(function (p) { return p.id === id; }); }
 
+  /* ---------- 自定义下拉（美化 #poemSelect；select 本身保留为数据源） ---------- */
+  function enhancePicker() {
+    var sel = el('poemSelect');
+    var host = el('poemPicker');
+    if (!sel || !host) return;
+    host.innerHTML = '';
+
+    var trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'picker-trigger';
+    trigger.setAttribute('aria-haspopup', 'listbox');
+    trigger.setAttribute('aria-expanded', 'false');
+    var valSpan = document.createElement('span');
+    valSpan.className = 'picker-value';
+    var caret = document.createElement('span');
+    caret.className = 'picker-caret';
+    caret.innerHTML = '<svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">' +
+      '<path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" ' +
+      'stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    trigger.appendChild(valSpan); trigger.appendChild(caret);
+    host.appendChild(trigger);
+
+    var panel = document.createElement('div');
+    panel.className = 'picker-panel';
+    panel.setAttribute('role', 'listbox');
+    function addOpt(op) {
+      var o = document.createElement('div');
+      o.className = 'picker-opt';
+      o.setAttribute('role', 'option');
+      o.dataset.value = op.value;
+      o.textContent = op.textContent;
+      o.addEventListener('click', function () {
+        sel.value = op.value;
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+        syncValue();
+        close();
+      });
+      return o;
+    }
+    Array.prototype.forEach.call(sel.querySelectorAll('optgroup'), function (og) {
+      var g = document.createElement('div'); g.className = 'picker-group';
+      var lab = document.createElement('div'); lab.className = 'picker-group-label';
+      lab.textContent = og.label;
+      g.appendChild(lab);
+      Array.prototype.forEach.call(og.querySelectorAll('option'), function (op) {
+        g.appendChild(addOpt(op));
+      });
+      panel.appendChild(g);
+    });
+    Array.prototype.forEach.call(sel.querySelectorAll(':scope > option'), function (op) {
+      panel.appendChild(addOpt(op));
+    });
+    host.appendChild(panel);
+
+    function syncValue() {
+      var op = sel.options[sel.selectedIndex];
+      valSpan.textContent = op ? op.textContent : '—';
+      Array.prototype.forEach.call(panel.querySelectorAll('.picker-opt'), function (o) {
+        o.classList.toggle('selected', o.dataset.value === sel.value);
+      });
+    }
+    function open() { host.classList.add('open'); trigger.setAttribute('aria-expanded', 'true'); }
+    function close() { host.classList.remove('open'); trigger.setAttribute('aria-expanded', 'false'); }
+    trigger.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (host.classList.contains('open')) close(); else open();
+    });
+    document.addEventListener('click', function (e) { if (!host.contains(e.target)) close(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+    syncValue();
+  }
+
   function startPoem(poem) {
     state.poem = poem;
     state.answers = poem.lines.map(function (l) { return l.chars.map(function () { return ''; }); });
@@ -449,5 +521,6 @@
 
   /* ---------- 初始化 ---------- */
   fillSelect();
+  enhancePicker();
   go('home');
 })();

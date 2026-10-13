@@ -50,7 +50,8 @@
         <h3>选题专练</h3>
         <p class="hint">按篇目名称选择对应诗句（长诗仅取部分片段）</p>
         <div class="select-row">
-          <select id="poemSelect"></select>
+          <div class="picker" id="poemPicker"></div>
+          <select id="poemSelect" class="native-hidden" tabindex="-1" aria-hidden="true"></select>
           <button class="btn-primary" id="startByPick">开始练习</button>
         </div>
       </div>
