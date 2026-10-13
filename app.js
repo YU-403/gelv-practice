@@ -260,8 +260,41 @@
     });
   }
 
+  function renderPoemReview() {
+    var area = el('reviewPoem');
+    if (!area) return;
+    area.innerHTML = '';
+    var errSet = {};
+    state.result.errors.forEach(function (e) { errSet[e.li + '-' + e.ci] = e; });
+    state.poem.lines.forEach(function (line, li) {
+      var div = document.createElement('div');
+      div.className = 'line';
+      line.chars.forEach(function (ch, ci) {
+        var wrap = document.createElement('div');
+        wrap.className = 'ch';
+        var zi = document.createElement('span'); zi.className = 'zi'; zi.textContent = ch;
+        var cell = document.createElement('div'); cell.className = 'cell';
+        cell.textContent = line.tones[ci];               // 始终显示正确平仄
+        var e = errSet[li + '-' + ci];
+        if (e) {
+          cell.classList.add('wrong');
+          var ref = document.createElement('span');
+          ref.className = 'ans-ref';
+          ref.textContent = '你：' + (e.user === '' ? '未标' : e.user);
+          wrap.appendChild(zi); wrap.appendChild(cell); wrap.appendChild(ref);
+        } else {
+          cell.classList.add('correct');
+          wrap.appendChild(zi); wrap.appendChild(cell);
+        }
+        div.appendChild(wrap);
+      });
+      area.appendChild(div);
+    });
+  }
+
   function renderResult() {
     var r = state.result;
+    renderPoemReview();
     el('scoreCard').innerHTML =
       '<div class="verdict ' + (r.pass ? 'pass' : 'fail') + '">' + (r.pass ? '通 过' : '未通过') + '</div>' +
       '<div class="detail">共 ' + r.total + ' 字 · 标错 <b>' + r.errors.length + '</b> 个<br>' +
@@ -489,8 +522,32 @@
     });
   }
 
+  function renderRuGridReview() {
+    var g = el('reviewGrid');
+    if (!g) return;
+    g.innerHTML = '';
+    RU_STATE.items.forEach(function (it, i) {
+      var d = document.createElement('div');
+      d.className = 'ru-ch';
+      d.textContent = it.c;
+      var sel = RU_STATE.sel[i];
+      var tag = '';
+      if (it.ru && sel) { d.classList.add('correct'); tag = '✓'; }        // 入声·选中（对）
+      else if (it.ru && !sel) { d.classList.add('miss'); tag = '漏'; }     // 入声·漏选（错）
+      else if (!it.ru && sel) { d.classList.add('wrong'); tag = '误'; }    // 非入声·误选（错）
+      else { d.classList.add('neutral'); }                                 // 非入声·未选（对）
+      if (tag) {
+        var b = document.createElement('span');
+        b.className = 'ru-badge'; b.textContent = tag;
+        d.appendChild(b);
+      }
+      g.appendChild(d);
+    });
+  }
+
   function renderRuResult() {
     var r = RU_STATE.result;
+    renderRuGridReview();
     el('ruScore').innerHTML =
       '<div class="verdict ' + (r.pass ? 'pass' : 'fail') + '">' + (r.pass ? '通 过' : '未通过') + '</div>' +
       '<div class="detail">共 15 字 · 失误 <b>' + r.n + '</b> 个<br>' +
