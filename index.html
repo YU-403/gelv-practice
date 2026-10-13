@@ -119,7 +119,18 @@
     <div class="ru-ready">
       <div class="ready-seal">贰</div>
       <p class="ready-tip">准备好后点击「开始练习」<br>
-        将出现 <b>15 个字</b>，需在 <b>15 秒</b>内点选全部入声字</p>
+        将出现 <b>15 个字</b>，<span id="ruTimeHint">需在 <b>15 秒</b>内</span>点选全部入声字</p>
+      <div class="ru-time-row">
+        <span class="ru-time-label">练习时长</span>
+        <div class="picker" id="ruTimePicker"></div>
+        <select id="ruTimeSelect" class="native-hidden" tabindex="-1" aria-hidden="true">
+          <option value="15" selected>15 秒</option>
+          <option value="30">30 秒</option>
+          <option value="45">45 秒</option>
+          <option value="60">60 秒</option>
+          <option value="0">不限时</option>
+        </select>
+      </div>
       <button class="btn-primary wide" id="ruBegin">开 始 练 习</button>
     </div>
   </section>

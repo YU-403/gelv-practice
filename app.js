@@ -50,10 +50,10 @@
 
   function findPoem(id) { return DATA.poems.find(function (p) { return p.id === id; }); }
 
-  /* ---------- 自定义下拉（美化 #poemSelect；select 本身保留为数据源） ---------- */
-  function enhancePicker() {
-    var sel = el('poemSelect');
-    var host = el('poemPicker');
+  /* ---------- 自定义下拉（美化 select；原 select 保留为数据源） ---------- */
+  function enhancePicker(selId, hostId) {
+    var sel = el(selId);
+    var host = el(hostId);
     if (!sel || !host) return;
     host.innerHTML = '';
 
@@ -434,6 +434,7 @@
     }
   }
   function resumeRuTimer() {
+    if (RU_STATE.duration === 0) return;   // 不限时：不倒数
     if (!RU_STATE.timerId && RU_STATE.left > 0 && !RU_STATE.result) {
       RU_STATE.timerId = setInterval(function () {
         RU_STATE.left--;
@@ -461,7 +462,26 @@
   /* ============================================================
      入声字判别
      ============================================================ */
-  var RU_STATE = { items: [], sel: [], timerId: null, left: 15, result: null };
+  var RU_STATE = { items: [], sel: [], timerId: null, left: 15, duration: 15, result: null };
+
+  // 练习时长（秒）；0 = 不限时
+  function ruDuration() {
+    var sel = el('ruTimeSelect');
+    var v = sel ? parseInt(sel.value, 10) : 15;
+    return isNaN(v) ? 15 : v;
+  }
+  function initRuTime() {
+    var sel = el('ruTimeSelect');
+    if (!sel) return;
+    sel.addEventListener('change', updateRuHint);
+    updateRuHint();
+  }
+  function updateRuHint() {
+    var h = el('ruTimeHint');
+    if (!h) return;
+    var d = ruDuration();
+    h.innerHTML = d ? '需在 <b>' + d + ' 秒</b>内' : '不限时，可从容';
+  }
 
   function shuffle(a) {
     for (var i = a.length - 1; i > 0; i--) {
@@ -493,9 +513,10 @@
     RU_STATE.items = newRuQuestion();
     RU_STATE.sel = RU_STATE.items.map(function () { return false; });
     RU_STATE.result = null;
+    RU_STATE.duration = ruDuration();   // 读取本页所选时长
     renderRu();
     go('rusheng');          // 切到练习页（此时才显示题目）
-    startRuTimer();         // 看到题目即开始 15 秒计时
+    startRuTimer();         // 看到题目即开始计时
   }
   el('ruBegin').addEventListener('click', beginRu);
 
@@ -519,10 +540,16 @@
   function startRuTimer() {
     var tEl = el('ruTimer');
     if (RU_STATE.timerId) { clearInterval(RU_STATE.timerId); RU_STATE.timerId = null; }
-    RU_STATE.left = 15;
+    var d = RU_STATE.duration;
     tEl.hidden = false;
-    tEl.textContent = '15';
     tEl.classList.remove('warn');
+    if (d === 0) {                       // 不限时
+      RU_STATE.left = Infinity;
+      tEl.textContent = '∞';
+      return;
+    }
+    RU_STATE.left = d;
+    tEl.textContent = (d < 10 ? '0' : '') + d;
     resumeRuTimer();
   }
 
@@ -630,7 +657,9 @@
     var mr = el('metaRu'); if (mr) mr.textContent = (DATA.ruPool || []).length + ' 常用入声字';
   }
   fillSelect();
-  enhancePicker();
+  enhancePicker('poemSelect', 'poemPicker');
+  enhancePicker('ruTimeSelect', 'ruTimePicker');
   fillMeta();
+  initRuTime();
   go('home');
 })();

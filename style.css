@@ -332,6 +332,12 @@ select:focus { border-color:var(--gold); }
 .ru-ready .ready-tip { color: var(--text-secondary); font-size: 15px; line-height: 2.1; margin-bottom: 40px; }
 .ru-ready .ready-tip b { color: var(--error); font-size: 17px; }
 .ru-ready .btn-primary.wide { max-width: 380px; margin: 0 auto; }
+.ru-time-row {
+  display:flex; align-items:center; justify-content:center; gap:12px;
+  max-width:340px; margin:0 auto 30px;
+}
+.ru-time-label { font-family:var(--sans); font-size:14px; color:var(--text-secondary); white-space:nowrap; }
+.ru-time-row .picker { flex:1; min-width:0; }
 .ru-wrap { padding-top: 8px; text-align: center; }
 .ru-wrap .practice-sub b { color: var(--error); }
 .ru-grid {
