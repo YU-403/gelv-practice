@@ -149,22 +149,32 @@
   function renderPoem() {
     var area = el('poemArea');
     area.innerHTML = '';
-    state.poem.lines.forEach(function (line, li) {
-      var div = document.createElement('div');
-      div.className = 'line';
-      line.chars.forEach(function (ch, ci) {
-        var wrap = document.createElement('div');
-        wrap.className = 'ch';
-        var zi = document.createElement('span'); zi.className = 'zi'; zi.textContent = ch;
-        var cell = document.createElement('div');
-        cell.className = 'cell';
-        cell.dataset.li = li; cell.dataset.ci = ci;
-        cell.addEventListener('click', function () { cycle(cell, li, ci); });
-        wrap.appendChild(zi); wrap.appendChild(cell);
-        div.appendChild(wrap);
-      });
-      area.appendChild(div);
-    });
+    var lines = state.poem.lines;
+    // 一联一行：每 2 句（14 字）为一行，共 4 行
+    for (var k = 0; k < lines.length; k += 2) {
+      var row = document.createElement('div');
+      row.className = 'line couplet';
+      for (var h = 0; h < 2; h++) {
+        var li = k + h;
+        var line = lines[li];
+        if (!line) break;
+        var half = document.createElement('div');
+        half.className = 'half';
+        line.chars.forEach(function (ch, ci) {
+          var wrap = document.createElement('div');
+          wrap.className = 'ch';
+          var zi = document.createElement('span'); zi.className = 'zi'; zi.textContent = ch;
+          var cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.dataset.li = li; cell.dataset.ci = ci;
+          cell.addEventListener('click', function () { cycle(cell, +cell.dataset.li, +cell.dataset.ci); });
+          wrap.appendChild(zi); wrap.appendChild(cell);
+          half.appendChild(wrap);
+        });
+        row.appendChild(half);
+      }
+      area.appendChild(row);
+    }
   }
 
   function cycle(cell, li, ci) {
@@ -180,11 +190,11 @@
   /* ---------- 计时 ---------- */
   function startTimerIfNeeded() {
     state.timed = el('timedToggle').checked;
-    var tEl = el('timer');
+    var box = el('timerBox');
     if (state.timerId) { clearInterval(state.timerId); state.timerId = null; }
-    if (!state.timed) { tEl.hidden = true; return; }
+    if (!state.timed) { if (box) box.hidden = true; return; }
     state.left = 180;
-    tEl.hidden = false;
+    if (box) box.hidden = false;
     updateTimer();
     resumeTimer();
   }
