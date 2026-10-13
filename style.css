@@ -288,7 +288,7 @@ select:focus { border-color:var(--gold); }
 .score-card {
   background:var(--bg-card); border:1px solid var(--border-light); border-radius:14px; padding:30px; text-align:center; box-shadow:var(--shadow);
 }
-.score-card .verdict { font-family:var(--sans); font-weight:800; font-size:34px; letter-spacing:.14em; }
+.score-card .verdict { font-family:var(--sans); font-weight:800; font-size:42.5px; letter-spacing:.14em; }
 .score-card .verdict.pass { color:var(--success); }
 .score-card .verdict.fail { color:var(--error); }
 .score-card .detail { margin-top:14px; color:var(--text-secondary); font-size:15px; line-height:2; }
@@ -418,6 +418,7 @@ select:focus { border-color:var(--gold); }
 }
 .zi-verdict.pass { color:var(--success); }
 .zi-verdict.fail { color:var(--error); }
+.modal h3.h-zi { font-size:32.5px; }   /* 集字标题：26px × 1.25 */
 .modal h3.h-zi::after { margin-top:8px; }
 .modal h3::after { content:''; display:block; height:1px; margin-top:14px; background:linear-gradient(90deg, transparent, var(--gold) 50%, transparent); }
 .modal p { color:var(--text-secondary); font-size:15px; line-height:1.9; }
