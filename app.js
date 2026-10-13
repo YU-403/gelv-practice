@@ -51,12 +51,26 @@
   };
 
   /* ---------- 页面切换 ---------- */
+  var PAGE_LEVEL = { home: 0, mode: 1, ruready: 1, practice: 2, rusheng: 2, result: 3, ruresult: 3 };
+  var curLevel = 0;
   function go(page) {
     if (state.timerId) { clearInterval(state.timerId); state.timerId = null; }
-    document.querySelectorAll('.page').forEach(function (p) { p.classList.remove('active'); });
+    var lvl = PAGE_LEVEL[page] != null ? PAGE_LEVEL[page] : 0;
+    var dir = lvl > curLevel ? 'from-right' : (lvl < curLevel ? 'from-left' : '');
+    curLevel = lvl;
+    document.querySelectorAll('.page').forEach(function (p) {
+      p.classList.remove('active', 'from-right', 'from-left');
+    });
     var t = el('page-' + page);
-    if (t) t.classList.add('active');
+    if (t) { if (dir) t.classList.add(dir); t.classList.add('active'); }
     window.scrollTo(0, 0);
+  }
+  // 错落入场：为节点依次注入递增延迟
+  function stagger(nodes, step, cls) {
+    Array.prototype.forEach.call(nodes, function (n, i) {
+      n.classList.add(cls || 'stagger-in');
+      n.style.animationDelay = (i * step).toFixed(3) + 's';
+    });
   }
   document.querySelectorAll('[data-go]').forEach(function (b) {
     b.addEventListener('click', function () {
@@ -213,6 +227,7 @@
       }
       area.appendChild(row);
     }
+    stagger(area.querySelectorAll('.line'), 0.07);   // 逐联错落入场
   }
 
   function cycle(cell, li, ci) {
@@ -376,6 +391,12 @@
       }
       area.appendChild(row);
     }
+    // 逐联错落淡入 + 错格一次性高亮
+    stagger(area.querySelectorAll('.line'), 0.07);
+    Array.prototype.forEach.call(area.querySelectorAll('.cell.wrong, .cell.miss'), function (c) {
+      c.classList.add('cell-hi');
+      c.style.animationDelay = '0.35s';
+    });
   }
 
   function renderResult() {
@@ -585,6 +606,7 @@
       });
       g.appendChild(d);
     });
+    stagger(g.querySelectorAll('.ru-ch'), 0.03, 'pop-in');   // 字块错落弹出
   }
 
   function startRuTimer() {
@@ -664,6 +686,12 @@
         d.appendChild(b);
       }
       g.appendChild(d);
+    });
+    // 整块淡入（逐格会与 correct-glow 冲突）+ 错块一次性高亮
+    stagger([g], 0);
+    Array.prototype.forEach.call(g.querySelectorAll('.ru-ch.miss, .ru-ch.wrong'), function (c) {
+      c.classList.add('cell-hi');
+      c.style.animationDelay = '0.35s';
     });
   }
 

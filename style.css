@@ -54,6 +54,19 @@ body::before {
 .page { display:none; animation: fade-in .3s ease both; }
 .page.active { display:block; }
 @keyframes fade-in { from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none} }
+/* 页面切换方向感：更深=从右入，更浅=从左入 */
+.page.active.from-right { animation: slide-in-right .32s cubic-bezier(.2,.7,.3,1) both; }
+.page.active.from-left  { animation: slide-in-left  .32s cubic-bezier(.2,.7,.3,1) both; }
+@keyframes slide-in-right { from{opacity:0; transform:translateX(48px)} to{opacity:1; transform:none} }
+@keyframes slide-in-left  { from{opacity:0; transform:translateX(-48px)} to{opacity:1; transform:none} }
+/* 错落入场（辅助类，延迟由 JS 注入） */
+.stagger-in { opacity:0; animation: row-in .34s ease forwards; }
+.pop-in     { opacity:0; animation: pop-in .30s ease forwards; }
+@keyframes row-in { from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none} }
+@keyframes pop-in { from{opacity:0; transform:scale(.6)}   to{opacity:1; transform:scale(1)} }
+/* 错格一次性高亮闪过 */
+.cell-hi { animation: cell-hi .55s ease-out; }
+@keyframes cell-hi { 0%{ box-shadow:0 0 0 0 color-mix(in srgb, var(--error) 55%, transparent); } 100%{ box-shadow:0 0 0 12px transparent; } }
 
 /* ---------- 顶部提示条 ---------- */
 .top-bar {
