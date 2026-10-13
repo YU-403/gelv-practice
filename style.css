@@ -129,7 +129,8 @@ body::before {
 @keyframes pulse { 50% { opacity:.45; } }
 
 /* ---------- 模式选择 ---------- */
-.mode-wrap { display:flex; flex-direction:column; gap:18px; }
+.mode-wrap { display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start; }
+.mode-wrap .opt { grid-column:1 / -1; }
 .mode-block {
   background:var(--bg-card); border:1px solid var(--border-light); border-radius:12px; padding:20px 22px; box-shadow:var(--shadow);
 }
@@ -258,6 +259,7 @@ select:focus { border-color:var(--gold); }
 /* ---------- 响应式 ---------- */
 @media (max-width: 640px) {
   .module-grid { grid-template-columns:1fr; }
+  .mode-wrap { grid-template-columns:1fr; }
   .site-head h1 { font-size:30px; }
   .ch .zi { font-size:23px; }
   .cell { width:29px; height:26px; font-size:16px; }
