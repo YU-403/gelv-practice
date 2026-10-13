@@ -453,11 +453,11 @@
 
   /* ---------- 弹窗 ---------- */
   // 集字「通过 / 未通过」（颜真卿），用 mask 着色：通过=松绿 / 未通过=朱砂
+  // 集字以 base64 内联在 style.css（.zi-wei/.zi-tong/.zi-guo），file:// 下亦可用
   function ziVerdict(pass) {
-    var chars = pass ? ['zi_tong', 'zi_guo'] : ['zi_wei', 'zi_tong', 'zi_guo'];
-    var inner = chars.map(function (f) {
-      return '<i class="zi" style="-webkit-mask-image:url(assets/' + f + '.png);' +
-        'mask-image:url(assets/' + f + '.png)"></i>';
+    var chars = pass ? ['zi-tong', 'zi-guo'] : ['zi-wei', 'zi-tong', 'zi-guo'];
+    var inner = chars.map(function (c) {
+      return '<i class="zi ' + c + '"></i>';
     }).join('');
     return '<span class="zi-verdict ' + (pass ? 'pass' : 'fail') + '" role="img" ' +
       'aria-label="' + (pass ? '通过' : '未通过') + '">' + inner + '</span>';
