@@ -264,6 +264,15 @@
     var area = el('reviewPoem');
     if (!area) return;
     area.innerHTML = '';
+    // 顶部图例：三色三态一次说明
+    var legend = document.createElement('div');
+    legend.className = 'review-legend';
+    legend.innerHTML =
+      '<span class="lg"><i class="rv i-ok"></i>标对</span>' +
+      '<span class="lg"><i class="rv i-bad"></i>标错</span>' +
+      '<span class="lg"><i class="rv i-blank"></i>未标</span>';
+    area.appendChild(legend);
+
     var errSet = {};
     state.result.errors.forEach(function (e) { errSet[e.li + '-' + e.ci] = e; });
     state.poem.lines.forEach(function (line, li) {
@@ -276,13 +285,18 @@
         var cell = document.createElement('div'); cell.className = 'cell';
         var right = line.tones[ci];
         var user = state.answers[li][ci];               // 本人作答：'' / '○' / '●'
-        cell.textContent = user === '' ? '—' : user;    // 格子=我的作答（未标显「—」）
         var e = errSet[li + '-' + ci];
+        if (user === '') {                              // 未标：灰虚线 + 「空」
+          cell.classList.add('blank');
+          cell.textContent = '空';
+        } else {
+          cell.textContent = user;                      // 格子=我的作答
+        }
         if (!e) {
-          cell.classList.add('correct');                // 绿：标对
+          if (user !== '') cell.classList.add('correct');       // 绿：标对
           wrap.appendChild(zi); wrap.appendChild(cell);
         } else {
-          cell.classList.add('wrong');                  // 红：标错/漏标
+          if (user !== '') cell.classList.add('wrong');         // 红：标错
           var ref = document.createElement('span');
           ref.className = 'ans-ref';
           ref.textContent = '应为' + (right === '○' ? '平' : '仄');   // 框下小字=正确答案

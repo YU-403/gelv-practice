@@ -271,6 +271,21 @@ select:focus { border-color:var(--gold); }
   position:absolute; top:calc(100% + 1px); left:50%; transform:translateX(-50%);
   font-family:var(--sans); font-size:10px; color:var(--error); white-space:nowrap; letter-spacing:.02em;
 }
+/* 未标：灰虚线框 + 小号灰「空」 */
+.review-poem .cell.blank {
+  border-style:dashed; border-color:var(--text-light); color:var(--text-light);
+  background:var(--bg-page); font-family:var(--sans); font-size:14px;
+}
+/* 顶部三色图例 */
+.review-legend {
+  display:flex; gap:20px; justify-content:center; align-items:center; flex-wrap:wrap;
+  margin-bottom:4px; color:var(--text-secondary); font-size:13px;
+}
+.review-legend .lg { display:flex; align-items:center; gap:6px; }
+.review-legend .rv { width:20px; height:18px; border-radius:5px; border:1px solid; display:inline-block; }
+.review-legend .i-ok    { border-color:var(--success); background:var(--success-bg); }
+.review-legend .i-bad   { border-color:var(--error); background:var(--error-bg); }
+.review-legend .i-blank { border-style:dashed; border-color:var(--text-light); background:var(--bg-page); }
 /* 入声：15 字网格对照（✓对 / 漏=漏选 / 误=误选 / 灰=正确排除） */
 .review-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; max-width:460px; margin:22px auto 8px; }
 .review-grid .ru-ch { position:relative; pointer-events:none; }
