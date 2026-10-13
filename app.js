@@ -601,7 +601,16 @@
   el('ruAgain').addEventListener('click', enterRuReady);   // 回到缓冲界面
 
   /* ---------- 初始化 ---------- */
+  function fillMeta() {
+    var np = DATA.poems.length;
+    var byCat = {};
+    DATA.poems.forEach(function (p) { byCat[p.category] = (byCat[p.category] || 0) + 1; });
+    var parts = Object.keys(byCat).map(function (k) { return k + ' ' + byCat[k]; });
+    var mp = el('metaPoems'); if (mp) mp.textContent = np + ' 首（' + parts.join(' · ') + '）';
+    var mr = el('metaRu'); if (mr) mr.textContent = (DATA.ruPool || []).length + ' 常用入声字';
+  }
   fillSelect();
   enhancePicker();
+  fillMeta();
   go('home');
 })();
