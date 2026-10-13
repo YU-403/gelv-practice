@@ -379,9 +379,15 @@
   }
 
   /* ---------- 弹窗 ---------- */
+  function titleTag(title) {
+    var cls = '';
+    if (title === '通过') cls = ' class="ok"';
+    else if (title.indexOf('未通过') >= 0) cls = ' class="fail"';
+    return '<h3' + cls + '>' + title + '</h3>';
+  }
   function confirmModal(title, msg, okText, onOk) {
     pauseActiveTimer();   // 弹窗期间暂停计时
-    showModal('<h3>' + title + '</h3>' + (msg ? '<p>' + msg + '</p>' : '') +
+    showModal(titleTag(title) + (msg ? '<p>' + msg + '</p>' : '') +
       '<div class="actions"><button class="btn-ghost" data-x="cancel">取消</button>' +
       '<button class="btn-primary" data-x="ok">' + okText + '</button></div>',
       function (x) {
@@ -391,7 +397,7 @@
   }
   function alertModal(title, msg, okText, onOk, cancelText) {
     pauseActiveTimer();
-    var html = '<h3>' + title + '</h3>' + (msg ? '<p>' + msg + '</p>' : '') + '<div class="actions">';
+    var html = titleTag(title) + (msg ? '<p>' + msg + '</p>' : '') + '<div class="actions">';
     if (cancelText) html += '<button class="btn-ghost" data-x="cancel">' + cancelText + '</button>';
     html += '<button class="btn-primary" data-x="ok">' + okText + '</button></div>';
     showModal(html, function (x) {
@@ -557,7 +563,7 @@
     var anySel = RU_STATE.sel.some(function (s) { return s; });
     if (!anySel) {
       pauseActiveTimer();     // 提示期间暂停计时
-      showModal('<h3>提示</h3><p>未判别出任何入声字，请确认。</p>' +
+      showModal(titleTag('提示') + '<p>未判别出任何入声字，请确认。</p>' +
         '<div class="actions"><button class="btn-ghost" data-x="back">返回练习</button>' +
         '<button class="btn-primary" data-x="go">坚持提交</button></div>',
         function (x) {
