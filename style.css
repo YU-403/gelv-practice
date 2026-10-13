@@ -409,6 +409,16 @@ select:focus { border-color:var(--gold); }
 }
 .modal h3.ok   { color:var(--success); }
 .modal h3.fail { color:var(--error); }
+/* 集字「通过/未通过」（为文字位置的集字替换） */
+.zi-verdict { display:inline-flex; align-items:center; gap:.14em; }
+.zi-verdict .zi {
+  display:inline-block; width:1em; height:1em; background:currentColor;
+  -webkit-mask-repeat:no-repeat; -webkit-mask-size:contain; -webkit-mask-position:center;
+  mask-repeat:no-repeat; mask-size:contain; mask-position:center;
+}
+.zi-verdict.pass { color:var(--success); }
+.zi-verdict.fail { color:var(--error); }
+.modal h3.h-zi::after { margin-top:8px; }
 .modal h3::after { content:''; display:block; height:1px; margin-top:14px; background:linear-gradient(90deg, transparent, var(--gold) 50%, transparent); }
 .modal p { color:var(--text-secondary); font-size:15px; line-height:1.9; }
 .modal p b { color:var(--text-primary); font-weight:700; }

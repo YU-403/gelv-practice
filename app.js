@@ -413,7 +413,7 @@
     var r = state.result;
     renderPoemReview();
     el('scoreCard').innerHTML =
-      '<div class="verdict ' + (r.pass ? 'pass' : 'fail') + '">' + (r.pass ? '通 过' : '未通过') + '</div>' +
+      '<div class="verdict">' + ziVerdict(r.pass) + '</div>' +
       '<div class="detail">共 ' + r.total + ' 字 · 标错 <b>' + r.errors.length + '</b> 个<br>' +
       '<span style="font-size:13px;color:var(--text-light)">通过标准：失误 ≤ 3 字</span></div>';
 
@@ -452,11 +452,21 @@
   }
 
   /* ---------- 弹窗 ---------- */
+  // 集字「通过 / 未通过」（颜真卿），用 mask 着色：通过=松绿 / 未通过=朱砂
+  function ziVerdict(pass) {
+    var chars = pass ? ['zi_tong', 'zi_guo'] : ['zi_wei', 'zi_tong', 'zi_guo'];
+    var inner = chars.map(function (f) {
+      return '<i class="zi" style="-webkit-mask-image:url(assets/' + f + '.png);' +
+        'mask-image:url(assets/' + f + '.png)"></i>';
+    }).join('');
+    return '<span class="zi-verdict ' + (pass ? 'pass' : 'fail') + '" role="img" ' +
+      'aria-label="' + (pass ? '通过' : '未通过') + '">' + inner + '</span>';
+  }
   function titleTag(title) {
-    var cls = '';
-    if (title === '通过') cls = ' class="ok"';
-    else if (title.indexOf('未通过') >= 0) cls = ' class="fail"';
-    return '<h3' + cls + '>' + title + '</h3>';
+    if (title === '通过' || title.indexOf('未通过') >= 0) {
+      return '<h3 class="h-zi">' + ziVerdict(title === '通过') + '</h3>';
+    }
+    return '<h3>' + title + '</h3>';
   }
   function confirmModal(title, msg, okText, onOk) {
     pauseActiveTimer();   // 弹窗期间暂停计时
@@ -715,7 +725,7 @@
     var r = RU_STATE.result;
     renderRuGridReview();
     el('ruScore').innerHTML =
-      '<div class="verdict ' + (r.pass ? 'pass' : 'fail') + '">' + (r.pass ? '通 过' : '未通过') + '</div>' +
+      '<div class="verdict">' + ziVerdict(r.pass) + '</div>' +
       '<div class="detail">共 15 字 · 失误 <b>' + r.n + '</b> 个<br>' +
       '<span style="font-size:13px;color:var(--text-light)">通过标准：零失误</span></div>';
     var area = el('ruReview');
