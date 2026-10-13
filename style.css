@@ -60,7 +60,15 @@ body::before {
   background: linear-gradient(135deg, var(--accent), var(--accent-dark));
   color: var(--bg-page); text-align: center; padding: 7px 16px;
   font-size: 13px; font-family: var(--sans); letter-spacing: .5px;
+  display: flex; align-items: center; justify-content: center; position: relative;
 }
+.sound-toggle {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; font-size: 15px; line-height: 1;
+  padding: 4px 6px; border-radius: 6px; opacity: .85; transition: opacity .2s, background .2s;
+}
+.sound-toggle:hover { opacity: 1; background: color-mix(in srgb, #fff 15%, transparent); }
+.sound-toggle.off { opacity: .55; }
 
 /* ---------- 首页 ---------- */
 .home-wrap { padding-top: 6vh; }
@@ -246,6 +254,15 @@ select:focus { border-color:var(--gold); }
 .cell.ping { color:var(--accent); border-color:var(--accent); background:color-mix(in srgb, var(--accent) 8%, transparent); }
 .cell.ze   { color:var(--error); border-color:var(--error); background:var(--error-bg); }
 .cell.correct { border-color:var(--success); background:var(--success-bg); color:var(--success); }
+/* 点击即时脉冲 */
+@keyframes click-pulse { 0%{ box-shadow:0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent); } 100%{ box-shadow:0 0 0 9px color-mix(in srgb, var(--accent) 0%, transparent); } }
+.cell.pulse, .ru-ch.pulse { animation: click-pulse .35s ease-out; }
+/* 正确项呼吸光晕 */
+@keyframes correct-glow {
+  0%,100% { box-shadow:0 0 0 0 color-mix(in srgb, var(--success) 22%, transparent); }
+  50%     { box-shadow:0 0 0 6px color-mix(in srgb, var(--success) 10%, transparent); }
+}
+.cell.correct { animation: correct-glow 2.2s ease-in-out infinite; }
 .cell.wrong   { border-color:var(--error); background:var(--error-bg); color:var(--error); animation: shake .3s; }
 .cell.miss    { border-style:dashed; border-color:var(--gold-deep); color:var(--gold-ink); }
 @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-3px)} 75%{transform:translateX(3px)} }
@@ -351,7 +368,7 @@ select:focus { border-color:var(--gold); }
 }
 .ru-ch:hover { border-color: var(--gold); transform: translateY(-2px); }
 .ru-ch.selected { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); font-weight: 600; }
-.ru-ch.correct { border-color: var(--success); background: var(--success-bg); color: var(--success); }
+.ru-ch.correct { border-color: var(--success); background: var(--success-bg); color: var(--success); animation: correct-glow 2.2s ease-in-out infinite; }
 .ru-ch.wrong { border-color: var(--error); background: var(--error-bg); color: var(--error); animation: shake .3s; }
 .ru-ch:disabled { cursor: default; }
 

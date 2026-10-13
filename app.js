@@ -4,6 +4,44 @@
 (function () {
   'use strict';
   var DATA = window.GELV_DATA || { poems: [], rusheng: [] };
+
+  /* ---------- 音效（Web Audio 合成，无音频文件） ---------- */
+  var audioCtx = null;
+  var SOUND_ON = localStorage.getItem('gelv_sound') !== 'off';   // 默认开
+  function getAudioCtx() {
+    if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+    return audioCtx;
+  }
+  function beep(freq, type, dur, vol, delay) {
+    if (!SOUND_ON) return;
+    try {
+      var ctx = getAudioCtx(); if (!ctx) return;
+      var t0 = ctx.currentTime + (delay || 0);
+      var osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = freq; osc.type = type;
+      gain.gain.setValueAtTime(vol, t0);
+      gain.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+      osc.start(t0); osc.stop(t0 + dur);
+    } catch (e) {}
+  }
+  function playClick()   { beep(880, 'sine', 0.06, 0.15, 0); }
+  function playCorrect() { beep(660, 'sine', 0.25, 0.12, 0); beep(880, 'sine', 0.25, 0.12, 0.1); }
+  function playWrong()   { beep(200, 'sawtooth', 0.3, 0.1, 0); }
+  function setSound(on) {
+    SOUND_ON = on;
+    localStorage.setItem('gelv_sound', on ? 'on' : 'off');
+    var ic = document.getElementById('soundIcon'); if (ic) ic.textContent = on ? '🔊' : '🔇';
+    var b = document.getElementById('soundToggle'); if (b) b.classList.toggle('off', !on);
+  }
+  (function initSound() {
+    var b = document.getElementById('soundToggle');
+    if (b) b.addEventListener('click', function () {
+      setSound(!SOUND_ON);
+      if (SOUND_ON) playClick();   // 开启时给个反馈
+    });
+    setSound(SOUND_ON);
+  })();
   var RU = new Set(DATA.rusheng || []);
   var RU_TRAP = new Set(DATA.ruPool || []);   // ② 古仄今平：今读平声的入声字
 
@@ -185,6 +223,9 @@
     cell.textContent = next;
     cell.classList.toggle('ping', next === '○');
     cell.classList.toggle('ze', next === '●');
+    playClick();
+    // 点击脉冲
+    cell.classList.remove('pulse'); void cell.offsetWidth; cell.classList.add('pulse');
   }
 
   /* ---------- 计时 ---------- */
@@ -243,6 +284,7 @@
     });
     state.result = { errors: errors, pass: errors.length <= 3, total: countTotal() };
     markPoem();
+    if (state.result.pass) playCorrect(); else playWrong();
     alertModal(
       state.result.pass ? '通过' : '未通过',
       '共 <b>' + state.result.total + '</b> 字，标错 <b>' + errors.length + '</b> 个。' +
@@ -538,6 +580,8 @@
         if (RU_STATE.result) return;
         RU_STATE.sel[i] = !RU_STATE.sel[i];
         d.classList.toggle('selected', RU_STATE.sel[i]);
+        playClick();
+        d.classList.remove('pulse'); void d.offsetWidth; d.classList.add('pulse');
       });
       g.appendChild(d);
     });
@@ -585,6 +629,7 @@
     var errs = miss.length + extra.length;
     RU_STATE.result = { miss: miss, extra: extra, pass: errs === 0, n: errs };
     markRu();
+    if (RU_STATE.result.pass) playCorrect(); else playWrong();
     alertModal(RU_STATE.result.pass ? '通过' : '未通过',
       '共 ' + RU_STATE.items.length + ' 字，失误 <b>' + errs + '</b> 个。' +
       (RU_STATE.result.pass ? '零失误，达到通过标准。' : '未达零失误标准。'),
