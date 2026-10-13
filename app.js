@@ -67,9 +67,18 @@
   }
   // 错落入场：为节点依次注入递增延迟
   function stagger(nodes, step, cls) {
+    var k = cls || 'stagger-in';
     Array.prototype.forEach.call(nodes, function (n, i) {
-      n.classList.add(cls || 'stagger-in');
+      n.classList.add(k);
       n.style.animationDelay = (i * step).toFixed(3) + 's';
+      // 入场动画结束后清除类，避免残留 opacity:0 基础值
+      // （否则后续 .pulse / .correct 的 animation 会覆盖 forwards 填充，元素退回透明）
+      n.addEventListener('animationend', function h(e) {
+        if (e.target !== n) return;
+        n.classList.remove(k);
+        n.style.animationDelay = '';
+        n.removeEventListener('animationend', h);
+      });
     });
   }
   document.querySelectorAll('[data-go]').forEach(function (b) {

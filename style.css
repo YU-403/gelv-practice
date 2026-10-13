@@ -59,9 +59,11 @@ body::before {
 .page.active.from-left  { animation: slide-in-left  .32s cubic-bezier(.2,.7,.3,1) both; }
 @keyframes slide-in-right { from{opacity:0; transform:translateX(48px)} to{opacity:1; transform:none} }
 @keyframes slide-in-left  { from{opacity:0; transform:translateX(-48px)} to{opacity:1; transform:none} }
-/* 错落入场（辅助类，延迟由 JS 注入） */
-.stagger-in { opacity:0; animation: row-in .34s ease forwards; }
-.pop-in     { opacity:0; animation: pop-in .30s ease forwards; }
+/* 错落入场（辅助类，延迟由 JS 注入）
+   用 backwards 填充 + 基础不透明：延迟期显示起始态，结束后回到正常不透明，
+   不残留 opacity:0——避免 .pulse/.correct 覆盖 animation 时元素消失 */
+.stagger-in { animation: row-in .34s ease backwards; }
+.pop-in     { animation: pop-in .30s ease backwards; }
 @keyframes row-in { from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none} }
 @keyframes pop-in { from{opacity:0; transform:scale(.6)}   to{opacity:1; transform:scale(1)} }
 /* 错格一次性高亮闪过 */
