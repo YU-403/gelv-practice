@@ -274,17 +274,19 @@
         wrap.className = 'ch';
         var zi = document.createElement('span'); zi.className = 'zi'; zi.textContent = ch;
         var cell = document.createElement('div'); cell.className = 'cell';
-        cell.textContent = line.tones[ci];               // 始终显示正确平仄
+        var right = line.tones[ci];
+        var user = state.answers[li][ci];               // 本人作答：'' / '○' / '●'
+        cell.textContent = user === '' ? '—' : user;    // 格子=我的作答（未标显「—」）
         var e = errSet[li + '-' + ci];
-        if (e) {
-          cell.classList.add('wrong');
+        if (!e) {
+          cell.classList.add('correct');                // 绿：标对
+          wrap.appendChild(zi); wrap.appendChild(cell);
+        } else {
+          cell.classList.add('wrong');                  // 红：标错/漏标
           var ref = document.createElement('span');
           ref.className = 'ans-ref';
-          ref.textContent = '你：' + (e.user === '' ? '未标' : e.user);
+          ref.textContent = '应为' + (right === '○' ? '平' : '仄');   // 框下小字=正确答案
           wrap.appendChild(zi); wrap.appendChild(cell); wrap.appendChild(ref);
-        } else {
-          cell.classList.add('correct');
-          wrap.appendChild(zi); wrap.appendChild(cell);
         }
         div.appendChild(wrap);
       });
