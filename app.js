@@ -94,7 +94,8 @@
   };
 
   /* ---------- 页面切换 ---------- */
-  var PAGE_LEVEL = { home: 0, mode: 1, ruready: 1, practice: 2, rusheng: 2, result: 3, ruresult: 3 };
+  var PAGE_LEVEL = { home: 0, mode: 1, ruready: 1, practice: 2, rusheng: 2, zedrill: 2,
+                     result: 3, ruresult: 3, zedrillresult: 3 };
   var curLevel = 0;
   function go(page) {
     if (state.timerId) { clearInterval(state.timerId); state.timerId = null; }
@@ -250,26 +251,127 @@
 
   });
 
-  el('startWeak').addEventListener('click', function () {
-    var weak = weakZe().slice(0, 20);
-    if (!weak.length) {
-      alertModal('暂无薄弱字', '先随机练几首——标错的字会自动记入错题本。', '知道了');
+  el('startWeak').addEventListener('click', startZeDrill);
+
+  /* ================= 薄弱字专练：单字判平仄 ===================
+     出题不带诗句语境；答案取该字的平水韵平仄
+     （data.charTone：p 平 / z 仄 / pz 平仄两读两可）；
+     答对一次即从错题本移出，答错则错误次数 +1。 ================= */
+  var ZE = { chars: [], ans: [], cur: 0, result: null };
+
+  function zeKey(ch) { return (DATA.charTone || {})[ch] || null; }
+  function zeWeakPool() { return weakZe().filter(function (c) { return !!zeKey(c); }); }
+  function zeIsRight(ch, user) {
+    var k = zeKey(ch);
+    if (k === 'pz') return user === '○' || user === '●';   // 两读：平仄皆可
+    return k === 'p' ? user === '○' : user === '●';
+  }
+  function zeKeyText(ch) {
+    var k = zeKey(ch);
+    return k === 'p' ? '平' : k === 'z' ? '仄' : '平/仄 两可';
+  }
+  function zeTags(ch) {
+    var t = [];
+    if (RU.has(ch) || RU_TRAP.has(ch)) t.push('入声');
+    if (zeKey(ch) === 'pz' || RU_DUAL.has(ch)) t.push('两读');
+    return t.join('·');
+  }
+  function zeCell(i) { return document.querySelector('#zeGrid .cell[data-i="' + i + '"]'); }
+  function zePaint(i) {
+    var c = zeCell(i); if (!c) return;
+    var v = ZE.ans[i];
+    c.textContent = v;
+    c.classList.toggle('ping', v === '○');
+    c.classList.toggle('ze', v === '●');
+  }
+  function zeCursor(i) {
+    var old = document.querySelector('#zeGrid .cell.cur');
+    if (old) old.classList.remove('cur');
+    var c = zeCell(i); if (c) c.classList.add('cur');
+    ZE.cur = i;
+  }
+  function zeSet(i, v) {
+    if (ZE.result) return;
+    ZE.ans[i] = v; zePaint(i); playClick();
+  }
+  function zeNext() { if (ZE.cur + 1 < ZE.chars.length) zeCursor(ZE.cur + 1); }
+  function zePrev() { if (ZE.cur > 0) { zeSet(ZE.cur - 1, ''); zeCursor(ZE.cur - 1); } }
+
+  function startZeDrill() {
+    var pool = zeWeakPool().slice(0, 12);
+    if (!pool.length) {
+      alertModal('暂无薄弱字', '先练几首——标错的字会自动记入错题本。', '知道了');
       return;
     }
-    var cands = [], bestScore = -1;
-    DATA.poems.forEach(function (p) {
-      var set = {};
-      p.lines.forEach(function (l) { l.chars.forEach(function (c) { set[c] = 1; }); });
-      var sc = weak.reduce(function (t, c) { return t + (set[c] ? 1 : 0); }, 0);
-      if (sc > bestScore) { bestScore = sc; cands = [p]; }
-      else if (sc === bestScore) cands.push(p);
+    ZE.chars = pool;
+    ZE.ans = pool.map(function () { return ''; });
+    ZE.result = null;
+    var g = el('zeGrid');
+    g.innerHTML = '';
+    pool.forEach(function (ch, i) {
+      var wrap = document.createElement('div');
+      wrap.className = 'ch';
+      var zi = document.createElement('span'); zi.className = 'zi'; zi.textContent = ch;
+      var cell = document.createElement('div'); cell.className = 'cell'; cell.dataset.i = i;
+      cell.addEventListener('click', function () {
+        if (ZE.result) return;
+        var cur = ZE.ans[i];
+        zeSet(i, cur === '' ? '○' : cur === '○' ? '●' : '');
+        zeCursor(i);
+      });
+      wrap.appendChild(zi); wrap.appendChild(cell);
+      g.appendChild(wrap);
     });
-    if (bestScore <= 0) {
-      alertModal('暂无薄弱字', '错题本里的字没有出现在任何篇目中。', '知道了');
-      return;
-    }
-    startPoem(cands[Math.floor(Math.random() * cands.length)]);
+    el('zeDrillSub').textContent = '下列 ' + pool.length + ' 个字都是你标错过的——点击格子标出它的平仄';
+    zeCursor(0);
+    go('zedrill');
+  }
+
+  el('zeDrillSubmit').addEventListener('click', function () {
+    var blank = ZE.ans.filter(function (a) { return a === ''; }).length;
+    confirmModal('确认提交？', blank ? '还有 ' + blank + ' 个字未作答，将判为错。' : '将立即批改本次作答。', '提交', function () {
+      if (blank) {
+        alertModal('尚未完成', '还有 <b>' + blank + '</b> 个字未标，<b>空白将判为错</b>。是否继续提交？',
+          '坚持提交', zeGrade, '返回练习');
+      } else zeGrade();
+    });
   });
+
+  function zeGrade() {
+    var right = 0, wrong = 0;
+    ZE.chars.forEach(function (ch, i) {
+      if (zeIsRight(ch, ZE.ans[i])) { right++; delete REC.ze[ch]; }   // 答对一次即移出
+      else { wrong++; REC.ze[ch] = { n: ((REC.ze[ch] || {}).n || 0) + 1, streak: 0 }; }
+    });
+    saveRec();
+    ZE.result = { right: right, wrong: wrong, total: ZE.chars.length };
+    if (wrong) playWrong(); else playCorrect();
+    renderZeResult();
+    go('zedrillresult');
+  }
+
+  function renderZeResult() {
+    var r = ZE.result;
+    el('zeDrillScore').innerHTML =
+      '<div class="verdict">' + (r.wrong ? '错 ' + r.wrong + ' 个' : '全 对') + '</div>' +
+      '<div class="detail">共 <b>' + r.total + '</b> 字 · 答对 <b>' + r.right + '</b> 个<br>' +
+      '<span style="font-size:13px;color:var(--text-light)">答对的字已从错题本移出</span></div>';
+    var g = el('zeDrillReview');
+    g.innerHTML = '';
+    ZE.chars.forEach(function (ch, i) {
+      var ok = zeIsRight(ch, ZE.ans[i]);
+      var d = document.createElement('div');
+      d.className = 'ze-item ' + (ok ? 'ok' : 'bad');
+      d.innerHTML = '<span class="ze-ch">' + ch + '</span>' +
+        '<span class="ze-my">' + (ZE.ans[i] || '空') + '</span>' +
+        '<span class="ze-key">' + zeKeyText(ch) + '</span>' +
+        (zeTags(ch) ? '<span class="ze-tag">' + zeTags(ch) + '</span>' : '');
+      g.appendChild(d);
+    });
+    el('zeDrillNote').innerHTML = '<div class="rline"><span class="tag">错题本</span>本次移出 <b>' +
+      r.right + '</b> 个，还剩 <b>' + zeWeakPool().length + '</b> 个待攻克</div>';
+  }
+  el('zeDrillAgain').addEventListener('click', startZeDrill);
   el('clearRec').addEventListener('click', function () {
     confirmModal('清空练习记录？', '会删除错题本与成绩记录（题库数据不受影响）。', '清空', function () {
       REC = { poems: {}, ze: {}, ruMiss: {}, ruExtra: {} };
@@ -284,7 +386,8 @@
 
     var list = el('weakList'), btn = el('startWeak');
     if (!list) return;
-    var weak = weakZe().slice(0, 10);
+    // 只列「有答案、可专练」的字——与专练池保持一致（无韵书依据的字跳过）
+    var weak = zeWeakPool().slice(0, 10);
     if (!weak.length) {
       list.innerHTML = '<span class="weak-empty">暂无记录——标错的字会自动记入</span>';
       if (btn) btn.disabled = true;
@@ -394,17 +497,29 @@
     playClick();
   }
   document.addEventListener('keydown', function (e) {
-    if (activePage() !== 'page-practice' || state.result) return;
+    var pg = activePage();
+    if (pg !== 'page-practice' && pg !== 'page-zedrill') return;
     var m = el('modal'); if (m && !m.hidden) return;   // 弹窗期间不接管按键
     var tag = (e.target && e.target.tagName) || '';
     if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+    if (e.isComposing || e.keyCode === 229) return;    // 中文输入法组合态：不接管
     var k = e.key;
-    if (k === 'Backspace') { cursorPrev(); e.preventDefault(); return; }
-    if (k === 'a' || k === 'A') setAnswer(state.cursor.li, state.cursor.ci, '○');
-    else if (k === 'd' || k === 'D') setAnswer(state.cursor.li, state.cursor.ci, '●');
-    else if (k === 's' || k === 'S') setAnswer(state.cursor.li, state.cursor.ci, '');
-    else return;
-    cursorNext();
+    if (k === 'Backspace') {
+      if (pg === 'page-practice') cursorPrev(); else zePrev();
+      e.preventDefault(); return;
+    }
+    var v = (k === 'a' || k === 'A') ? '○' : (k === 'd' || k === 'D') ? '●' :
+            (k === 's' || k === 'S') ? '' : null;
+    if (v === null) return;
+    if (pg === 'page-practice') {
+      if (state.result) return;
+      setAnswer(state.cursor.li, state.cursor.ci, v);
+      cursorNext();
+    } else {
+      if (ZE.result) return;
+      zeSet(ZE.cur, v);
+      zeNext();
+    }
     e.preventDefault();
   });
 

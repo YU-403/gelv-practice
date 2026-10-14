@@ -189,6 +189,24 @@ body::before {
 .weak-empty { font-family:var(--sans); font-size:13px; color:var(--text-light); }
 #startWeak[disabled] { opacity:.45; cursor:not-allowed; }
 #startWeak[disabled]:hover { transform:none; }
+
+/* ---------- 薄弱字专练：单字判平仄 ---------- */
+.ze-grid { display:flex; flex-wrap:wrap; justify-content:center; gap:22px 12px;
+  max-width:860px; margin:0 auto; }
+.ze-grid .ch { min-width:58px; }
+/* 结果页：逐字对照（字 · 我的作答 · 正确答案 · 入声/两读标签） */
+.ze-review { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-top:6px; }
+.ze-item { display:flex; align-items:center; gap:9px;
+  padding:6px 13px; border:1px solid var(--border); border-radius:9px; background:var(--bg-card); }
+.ze-item.ok  { border-color:var(--success); background:var(--success-bg); }
+.ze-item.bad { border-color:var(--error);   background:var(--error-bg); }
+.ze-item .ze-ch { font-family:var(--kai); font-size:26px; line-height:1.1; color:var(--text-primary); }
+.ze-item .ze-my { font-family:var(--kai); font-size:18px; color:var(--text-secondary); }
+.ze-item.ok  .ze-my { color:var(--success); }
+.ze-item.bad .ze-my { color:var(--error); }
+.ze-item .ze-key { font-family:var(--sans); font-size:13px; color:var(--text-light); }
+.ze-item .ze-tag { font-family:var(--sans); font-size:11px; color:var(--gold-ink);
+  background:var(--gold-light); border-radius:8px; padding:1px 6px; line-height:16px; }
 .select-row { display:flex; gap:10px; flex-wrap:wrap; }
 select {
   flex:1; min-width:200px; font-family:inherit; font-size:15px; color:var(--text-primary);
@@ -527,6 +545,10 @@ select:focus { border-color:var(--gold); }
   .review-poem .ru-summary { font-size:12px; padding:8px 10px; }
   .review-poem .ru-summary .rus-label { flex-basis:9.4em; }
   .review-poem .ru-summary .rus-chars { font-size:17px; }
+  .ze-grid { gap:16px 8px; }
+  .ze-grid .ch { min-width:46px; }
+  .ze-item { padding:5px 10px; gap:6px; }
+  .ze-item .ze-ch { font-size:22px; }
   .select-row { flex-direction:column; }
   .result-actions { flex-direction:column; }
 }

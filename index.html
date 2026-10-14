@@ -73,7 +73,7 @@
       </div>
       <div class="mode-block weak-block">
         <h3>薄弱字专练</h3>
-        <p class="hint">优先抽含你常标错的字的诗——标错的字自动记入，连续答对 2 次即移出</p>
+        <p class="hint">直接重考你标错过的字：给每个字标出平仄，答对即从错题本移出</p>
         <div class="weak-actions">
           <button class="btn-primary" id="startWeak">开始专练</button>
           <button class="btn-ghost small" id="clearRec">清空记录</button>
@@ -126,6 +126,44 @@
       <div class="result-actions">
         <button class="btn-primary" data-go="mode">再练一首</button>
         <button class="btn-ghost" data-go="home">返回首页</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 薄弱字专练 · 单字判平仄 ========== -->
+  <section id="page-zedrill" class="page">
+    <header class="bar">
+      <button class="back" data-go="mode">‹ 返回</button>
+      <h2>薄弱字专练</h2>
+      <span class="bar-spacer"></span>
+    </header>
+    <div class="practice-wrap">
+      <p class="practice-sub" id="zeDrillSub">—</p>
+      <div class="ze-grid" id="zeGrid"></div>
+      <p class="legend">
+        <span class="lg"><i class="cell-demo ping"></i>平</span>
+        <span class="lg"><i class="cell-demo ze"></i>仄</span>
+        <span class="lg-hint">点击字下方格子：空 → 平 → 仄 → 空</span>
+      </p>
+      <p class="kbd-hint">键盘：<b>A</b> 平 · <b>D</b> 仄 · <b>S</b> 跳过 · <b>⌫</b> 回退</p>
+      <button class="btn-primary wide" id="zeDrillSubmit">提 交</button>
+    </div>
+  </section>
+
+  <!-- ========== 薄弱字专练 · 结果 ========== -->
+  <section id="page-zedrillresult" class="page">
+    <header class="bar">
+      <button class="back" data-go="mode">‹ 返回选择</button>
+      <h2>专练结果</h2>
+      <span class="bar-spacer"></span>
+    </header>
+    <div class="result-wrap">
+      <div class="score-card" id="zeDrillScore"></div>
+      <div class="ze-review" id="zeDrillReview"></div>
+      <div class="review" id="zeDrillNote"></div>
+      <div class="result-actions">
+        <button class="btn-primary" id="zeDrillAgain">再练一批</button>
+        <button class="btn-ghost" data-go="mode">返回选择</button>
       </div>
     </div>
   </section>
