@@ -68,8 +68,14 @@
       </div>
       <div class="mode-block">
         <h3>随机实战</h3>
-        <p class="hint">从题库中随机抽取一首（或片段）作为题目</p>
+        <p class="hint">从题库中随机抽取一首（或片段）作为题目 · <span id="bagHint">本轮还剩 —</span></p>
         <button class="btn-primary" id="startRandom">随机抽题</button>
+      </div>
+      <div class="mode-block weak-block">
+        <h3>薄弱字专练</h3>
+        <p class="hint">优先抽含你常标错的字的诗——标错的字自动记入，连续答对 2 次即移出</p>
+        <button class="btn-primary" id="startWeak">开始专练</button>
+        <div class="weak-list" id="weakList"></div>
       </div>
       <div class="mode-block opt">
         <label class="switch">
@@ -98,6 +104,7 @@
         <span class="lg"><i class="cell-demo ze"></i>仄</span>
         <span class="lg-hint">点击字下方格子：空 → 平 → 仄 → 空</span>
       </p>
+      <p class="kbd-hint">键盘：<b>A</b> 平 · <b>D</b> 仄 · <b>S</b> 跳过 · <b>⌫</b> 回退　（鼠标点击亦可，点格子可移动光标）</p>
       <button class="btn-primary wide" id="submitBtn">提 交</button>
     </div>
   </section>
@@ -141,7 +148,23 @@
           <option value="0">不限时</option>
         </select>
       </div>
+      <div class="ru-time-row">
+        <span class="ru-time-label">入声字数量</span>
+        <div class="picker" id="ruCountPicker"></div>
+        <select id="ruCountSelect" class="native-hidden" tabindex="-1" aria-hidden="true">
+          <option value="exam" selected>考核档（3–6 随机）</option>
+          <option value="3">3 个</option>
+          <option value="6">6 个</option>
+          <option value="9">9 个</option>
+          <option value="12">12 个</option>
+          <option value="random">随机 3~12</option>
+        </select>
+      </div>
       <button class="btn-primary wide" id="ruBegin">开 始 练 习</button>
+      <button class="ru-drill" id="ruDrill">
+        <span class="drill-title">错题专练</span>
+        <span class="drill-count" id="drillCount">错题池：—</span>
+      </button>
     </div>
   </section>
 

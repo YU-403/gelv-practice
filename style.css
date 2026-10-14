@@ -172,6 +172,21 @@ body::before {
 .mode-block h3::before { content:''; display:inline-block; width:3px; height:14px; background:var(--error); border-radius:2px; margin-right:9px; vertical-align:-1px; }
 .mode-block .hint { color:var(--text-light); font-size:13px; margin-bottom:14px; }
 .mode-block.opt { padding:14px 22px; }
+/* 薄弱字专练：整行铺满，容纳高频错字条 */
+.mode-block.weak-block { grid-column:1 / -1; }
+.weak-list { display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; }
+.weak-chip {
+  display:inline-flex; align-items:center; gap:5px;
+  font-family:var(--kai); font-size:20px; color:var(--text-primary);
+  padding:2px 9px; border:1px solid var(--border); border-radius:7px; background:var(--bg-card);
+}
+.weak-chip i {
+  font-family:var(--sans); font-style:normal; font-size:11px; color:var(--error);
+  background:var(--error-bg); border-radius:9px; padding:0 5px; line-height:16px;
+}
+.weak-empty { font-family:var(--sans); font-size:13px; color:var(--text-light); }
+#startWeak[disabled] { opacity:.45; cursor:not-allowed; }
+#startWeak[disabled]:hover { transform:none; }
 .select-row { display:flex; gap:10px; flex-wrap:wrap; }
 select {
   flex:1; min-width:200px; font-family:inherit; font-size:15px; color:var(--text-primary);
@@ -261,6 +276,11 @@ select:focus { border-color:var(--gold); }
   background:var(--bg-card); transition:.15s; user-select:none;
 }
 .cell:hover { border-color:var(--gold); }
+/* 键盘当前格：金色描边（装饰色，不占用答对/答错的交互色槽） */
+.cell.cur {
+  border-color:var(--gold);
+  box-shadow:0 0 0 2px color-mix(in srgb, var(--gold) 32%, transparent);
+}
 .cell.ping { color:var(--accent); border-color:var(--accent); background:color-mix(in srgb, var(--accent) 8%, transparent); }
 .cell.ze   { color:var(--error); border-color:var(--error); background:var(--error-bg); }
 .cell.correct { border-color:var(--success); background:var(--success-bg); color:var(--success); }
@@ -283,6 +303,16 @@ select:focus { border-color:var(--gold); }
 .cell-demo.ping { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 8%, transparent); }
 .cell-demo.ze { border-color:var(--error); background:var(--error-bg); }
 .legend .lg-hint { font-family:var(--sans); font-size:12px; }
+/* 键盘操作提示 */
+.kbd-hint {
+  font-family:var(--sans); font-size:13px; color:var(--text-light);
+  text-align:center; margin:10px 0 0; letter-spacing:.02em;
+}
+.kbd-hint b {
+  display:inline-block; min-width:22px; padding:1px 5px; margin:0 1px;
+  border:1px solid var(--border); border-radius:5px; background:var(--bg-card);
+  color:var(--text-secondary); font-weight:600; font-size:12px; text-align:center;
+}
 
 /* ---------- 批改 ---------- */
 .score-card {
@@ -345,6 +375,9 @@ select:focus { border-color:var(--gold); }
   border:1px dashed var(--border); border-radius:8px; background:var(--bg-card);
 }
 .review-poem .ru-summary b { color:var(--accent-dark); font-weight:600; }
+/* 本题练习次数与最好成绩 */
+.review-poem .poem-record { font-family:var(--sans); font-size:13px; color:var(--text-light); }
+.review-poem .poem-record b { color:var(--accent-dark); font-weight:600; }
 /* 顶部三色图例 */
 .review-legend {
   display:flex; gap:20px; justify-content:center; align-items:center; flex-wrap:wrap;
@@ -375,12 +408,33 @@ select:focus { border-color:var(--gold); }
 /* 两读字说明段 */
 .dual-note .dual-body { margin-top:12px; font-family:var(--fang); font-size:14.5px; line-height:1.9; color:var(--text-secondary); }
 .dual-note .dual-body b { color:var(--gold-ink); }
+.drill-note { margin-top:12px; font-family:var(--sans); font-size:14px; color:var(--text-secondary); }
+.drill-note b { color:var(--accent-dark); }
 
 /* ---------- 入声字判别 ---------- */
 .ru-ready { text-align: center; padding-top: 10vh; }
 .ru-ready .ready-tip { color: var(--text-secondary); font-size: 15px; line-height: 2.1; margin-bottom: 40px; }
 .ru-ready .ready-tip b { color: var(--error); font-size: 17px; }
 .ru-ready .btn-primary.wide { max-width: 380px; margin: 0 auto; }
+/* 错题专练：石青虚线 + 金色计数徽章；与主按钮同宽、次一级 */
+.ru-drill {
+  display:flex; align-items:center; justify-content:center; gap:12px;
+  width:100%; max-width:380px; margin:14px auto 0; padding:12px 18px; cursor:pointer;
+  font-family:inherit; font-size:16px; color:var(--accent-dark);
+  background:color-mix(in srgb, var(--accent) 7%, transparent);
+  border:1px dashed var(--accent); border-radius:10px; transition:.18s;
+}
+.ru-drill:hover { background:color-mix(in srgb, var(--accent) 13%, transparent); transform:scale(1.01); }
+.ru-drill .drill-title { font-weight:600; letter-spacing:.06em; }
+.ru-drill .drill-count {
+  font-family:var(--sans); font-size:12px; color:var(--gold-ink);
+  background:var(--gold-light); border-radius:10px; padding:1px 9px; line-height:18px;
+}
+.ru-drill.empty {
+  border-style:solid; border-color:var(--border-light); color:var(--text-light);
+  background:transparent; cursor:default; transform:none;
+}
+.ru-drill.empty .drill-count { color:var(--text-light); background:var(--border-light); }
 .ru-time-row {
   display:flex; align-items:center; justify-content:center; gap:12px;
   max-width:340px; margin:0 auto 30px;

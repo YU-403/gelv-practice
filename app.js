@@ -46,9 +46,93 @@
   var RU_TRAP = new Set(DATA.ruPool || []);   // 古仄今平：今读平声的入声字（易误判为平）
   var RU_DUAL = new Set(DATA.ruDual || []);   // 两读字（另有非入声读法）
 
+
+
+  /* ---------- 练习记录：错题本与成绩（localStorage） ---------- */
+
+  var REC = (function () {
+
+    try {
+
+      var r = JSON.parse(localStorage.getItem('gelv_records') || '{}') || {};
+
+      r.poems = r.poems || {}; r.ze = r.ze || {};
+
+      r.ruMiss = r.ruMiss || {}; r.ruExtra = r.ruExtra || {};
+
+      return r;
+
+    } catch (e) { return { poems: {}, ze: {}, ruMiss: {}, ruExtra: {} }; }
+
+  })();
+
+  function saveRec() { try { localStorage.setItem('gelv_records', JSON.stringify(REC)); } catch (e) {} }
+
+  function weakZe() {                      // 未掌握的平仄错字，按错误次数降序
+
+    return Object.keys(REC.ze).sort(function (a, b) { return REC.ze[b].n - REC.ze[a].n; });
+
+  }
+
+  function ruWrongList() {                 // 入声错题池（漏选 + 误选）
+
+    var n = {};
+
+    Object.keys(REC.ruMiss).forEach(function (c) { n[c] = (n[c] || 0) + REC.ruMiss[c]; });
+
+    Object.keys(REC.ruExtra).forEach(function (c) { n[c] = (n[c] || 0) + REC.ruExtra[c]; });
+
+    return Object.keys(n).sort(function (a, b) { return n[b] - n[a]; });
+
+  }
+
+  var RU_DRILL = false;                    // 本轮是否为「错题专练」
+
+
+
+  /* ---------- 随机抽题的洗牌袋：一轮内不重复 ---------- */
+
+  function bagValid() {
+
+    try {
+
+      return (JSON.parse(localStorage.getItem('gelv_bag') || '[]') || [])
+
+        .filter(function (id) { return !!findPoem(id); });
+
+    } catch (e) { return []; }
+
+  }
+
+  function bagHint() {
+
+    var n = bagValid().length, t = el('bagHint');
+
+    if (t) t.textContent = n ? ('本轮还剩 ' + n + ' 首未抽') : '本轮已抽完，下次重新洗牌';
+
+  }
+
+  function nextRandomPoem() {
+
+    var bag = bagValid();
+
+    if (!bag.length) bag = shuffle(DATA.poems.map(function (p) { return p.id; }));
+
+    var id = bag.shift();
+
+    try { localStorage.setItem('gelv_bag', JSON.stringify(bag)); } catch (e) {}
+
+    bagHint();
+
+    return findPoem(id);
+
+  }
+
+
   var el = function (id) { return document.getElementById(id); };
   var state = {
     poem: null, answers: [], timed: false, left: 0, timerId: null, result: null,
+    cursor: { li: 0, ci: 0 },          // 键盘作答的当前格
   };
 
   /* ---------- 页面切换 ---------- */
@@ -64,6 +148,8 @@
     });
     var t = el('page-' + page);
     if (t) { if (dir) t.classList.add(dir); t.classList.add('active'); }
+    if (page === 'mode') { renderWeakPanel(); bagHint(); }
+    if (page === 'ruready') { updateDrillCount(); }
     window.scrollTo(0, 0);
   }
   // 错落入场：为节点依次注入递增延迟
@@ -200,9 +286,81 @@
     if (p) startPoem(p);
   });
   el('startRandom').addEventListener('click', function () {
-    var p = DATA.poems[Math.floor(Math.random() * DATA.poems.length)];
-    startPoem(p);
+
+    var p = nextRandomPoem();
+
+    if (p) startPoem(p);
+
   });
+
+  el('startWeak').addEventListener('click', function () {
+
+    var weak = weakZe().slice(0, 20);
+
+    if (!weak.length) {
+
+      alertModal('暂无薄弱字', '先随机练几首——标错的字会自动记入错题本。', '知道了');
+
+      return;
+
+    }
+
+    var cands = [], bestScore = -1;
+
+    DATA.poems.forEach(function (p) {
+
+      var set = {};
+
+      p.lines.forEach(function (l) { l.chars.forEach(function (c) { set[c] = 1; }); });
+
+      var sc = weak.reduce(function (t, c) { return t + (set[c] ? 1 : 0); }, 0);
+
+      if (sc > bestScore) { bestScore = sc; cands = [p]; }
+
+      else if (sc === bestScore) cands.push(p);
+
+    });
+
+    if (bestScore <= 0) {
+
+      alertModal('暂无薄弱字', '错题本里的字没有出现在任何篇目中。', '知道了');
+
+      return;
+
+    }
+
+    startPoem(cands[Math.floor(Math.random() * cands.length)]);
+
+  });
+
+  function renderWeakPanel() {
+
+    var list = el('weakList'), btn = el('startWeak');
+
+    if (!list) return;
+
+    var weak = weakZe().slice(0, 10);
+
+    if (!weak.length) {
+
+      list.innerHTML = '<span class="weak-empty">暂无记录——标错的字会自动记入</span>';
+
+      if (btn) btn.disabled = true;
+
+      return;
+
+    }
+
+    if (btn) btn.disabled = false;
+
+    list.innerHTML = weak.map(function (c) {
+
+      return '<span class="weak-chip">' + c + '<i>' + REC.ze[c].n + '</i></span>';
+
+    }).join('');
+
+  }
+
   el('quitPractice').addEventListener('click', function () {
     confirmModal('退出练习？', '当前进度将不会保存。', '退出', function () { go('mode'); });
   });
@@ -238,6 +396,7 @@
       area.appendChild(row);
     }
     stagger(area.querySelectorAll('.line'), 0.07);   // 逐联错落入场
+    setCursor(0, 0);                                 // 键盘光标回到首格
   }
 
   function cycle(cell, li, ci) {
@@ -250,8 +409,123 @@
     cell.classList.toggle('ze', next === '●');
     playClick();
     // 点击脉冲
+
     cell.classList.remove('pulse'); void cell.offsetWidth; cell.classList.add('pulse');
+
+    setCursor(li, ci);                                 // 点哪个格，键盘光标就移到哪
+
   }
+
+
+
+  /* ---------- 键盘作答（练习页）：A 平 · D 仄 · S 跳过 · Backspace 回退 ---------- */
+
+  function cellAt(li, ci) {
+
+    return document.querySelector('#poemArea .cell[data-li="' + li + '"][data-ci="' + ci + '"]');
+
+  }
+
+  function paint(li, ci) {
+
+    var c = cellAt(li, ci); if (!c) return;
+
+    var v = state.answers[li][ci];
+
+    c.textContent = v;
+
+    c.classList.toggle('ping', v === '○');
+
+    c.classList.toggle('ze', v === '●');
+
+  }
+
+  function setCursor(li, ci) {
+
+    var old = document.querySelector('#poemArea .cell.cur');
+
+    if (old) old.classList.remove('cur');
+
+    var c = cellAt(li, ci);
+
+    if (c) c.classList.add('cur');
+
+    state.cursor = { li: li, ci: ci };
+
+  }
+
+  function cursorNext() {
+
+    var p = state.poem; if (!p) return;
+
+    var li = state.cursor.li, ci = state.cursor.ci;
+
+    if (ci + 1 < p.lines[li].chars.length) ci++;
+
+    else if (li + 1 < p.lines.length) { li++; ci = 0; }
+
+    else return;                                       // 最后一格：停住
+
+    setCursor(li, ci);
+
+  }
+
+  function cursorPrev() {
+
+    var p = state.poem; if (!p) return;
+
+    var li = state.cursor.li, ci = state.cursor.ci;
+
+    if (ci > 0) ci--;
+
+    else if (li > 0) { li--; ci = p.lines[li].chars.length - 1; }
+
+    if (state.answers[li][ci] !== '') { state.answers[li][ci] = ''; paint(li, ci); }
+
+    setCursor(li, ci);
+
+  }
+
+  function setAnswer(li, ci, v) {
+
+    if (state.result) return;
+
+    state.answers[li][ci] = v;
+
+    paint(li, ci);
+
+    playClick();
+
+  }
+
+  document.addEventListener('keydown', function (e) {
+
+    if (activePage() !== 'page-practice' || state.result) return;
+
+    var m = el('modal'); if (m && !m.hidden) return;   // 弹窗期间不接管按键
+
+    var tag = (e.target && e.target.tagName) || '';
+
+    if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+
+    var k = e.key;
+
+    if (k === 'Backspace') { cursorPrev(); e.preventDefault(); return; }
+
+    if (k === 'a' || k === 'A') setAnswer(state.cursor.li, state.cursor.ci, '○');
+
+    else if (k === 'd' || k === 'D') setAnswer(state.cursor.li, state.cursor.ci, '●');
+
+    else if (k === 's' || k === 'S') setAnswer(state.cursor.li, state.cursor.ci, '');
+
+    else return;
+
+    cursorNext();
+
+    e.preventDefault();
+
+  });
+
 
   /* ---------- 计时 ---------- */
   function startTimerIfNeeded() {
@@ -309,7 +583,44 @@
         if (!ok) errors.push({ li: li, ci: ci, ch: ch, user: user, right: right });
       });
     });
+    /* ---- 记录：本题成绩 + 逐字掌握度（错题本） ---- */
+
+    var pr = REC.poems[state.poem.id] || { times: 0, best: 99 };
+
+    pr.times += 1;
+
+    pr.best = Math.min(pr.best, errors.length);
+
+    REC.poems[state.poem.id] = pr;
+
+    state.poem.lines.forEach(function (line, li) {
+
+      line.chars.forEach(function (ch, ci) {
+
+        var a = state.answers[li][ci];
+
+        var ok = a !== '' && a === line.tones[ci];
+
+        if (!ok) { REC.ze[ch] = { n: ((REC.ze[ch] || {}).n || 0) + 1, streak: 0 }; }
+
+        else if (REC.ze[ch]) {
+
+          REC.ze[ch].streak = (REC.ze[ch].streak || 0) + 1;
+
+          if (REC.ze[ch].streak >= 2) delete REC.ze[ch];   // 连续答对 2 次 → 移出错题本
+
+        }
+
+      });
+
+    });
+
+    saveRec();
+
+
+
     state.result = { errors: errors, pass: errors.length <= 3, total: countTotal() };
+
     markPoem();
     if (state.result.pass) playCorrect(); else playWrong();
     alertModal(
@@ -376,7 +687,29 @@
       sum.innerHTML = '本诗入声字 <b>' + list.length + '</b> 个　' + parts.join('　｜　') +
         (hasDual ? '　（＊＝另有非入声读法）' : '');
       area.appendChild(sum);
+
     })();
+
+
+
+    // 这首诗的练习次数与最好成绩
+
+    var pre = REC.poems[state.poem.id];
+
+    if (pre && pre.times) {
+
+      var prEl = document.createElement('div');
+
+      prEl.className = 'poem-record';
+
+      prEl.innerHTML = '这首诗你已练过 <b>' + pre.times + '</b> 次，最好成绩标错 <b>' +
+
+        (pre.best === 99 ? '—' : pre.best) + '</b> 个';
+
+      area.appendChild(prEl);
+
+    }
+
 
     var errSet = {};
     state.result.errors.forEach(function (e) { errSet[e.li + '-' + e.ci] = e; });
@@ -610,23 +943,99 @@
     return a;
   }
 
-  function newRuQuestion() {
-    var pool = (DATA.ruPool || []).slice();
-    var fe = (DATA.feiruPool || []).slice();
-    var n = 3 + Math.floor(Math.random() * 10);        // 3–12 个入声字
-    n = Math.min(n, pool.length, 15);
-    var ru = shuffle(pool).slice(0, n);
-    var rest = shuffle(fe).slice(0, 15 - n);
-    return shuffle(
-      ru.map(function (c) { return { c: c, ru: true }; })
-        .concat(rest.map(function (c) { return { c: c, ru: false }; }))
-    );
+  function ruCount() {
+
+    var v = el('ruCountSelect') ? el('ruCountSelect').value : 'exam';
+
+    if (v === 'exam') return 3 + Math.floor(Math.random() * 4);      // 考核档：3–6
+
+    if (v === 'random') return 3 + Math.floor(Math.random() * 10);   // 随机 3–12
+
+    return parseInt(v, 10) || 3;
+
   }
 
-  function enterRuReady() {
-    if (RU_STATE.timerId) { clearInterval(RU_STATE.timerId); RU_STATE.timerId = null; }
-    go('ruready');          // 缓冲界面：不显示题目、不计时
+
+
+  function newRuQuestion() {
+
+    var pool = (DATA.ruPool || []).slice();
+
+    var fe = (DATA.feiruPool || []).slice();
+
+    if (RU_DRILL) {                                   // 错题专练：优先出错字
+
+      var items = [], used = {}, nRu = 0, nFe = 0;
+
+      ruWrongList().forEach(function (c) {
+
+        if (items.length >= 15 || used[c]) return;
+
+        if (pool.indexOf(c) >= 0) { if (nRu < 12) { items.push({ c: c, ru: true }); used[c] = 1; nRu++; } }
+
+        else if (fe.indexOf(c) >= 0) { if (nFe < 12) { items.push({ c: c, ru: false }); used[c] = 1; nFe++; } }
+
+      });
+
+      if (nRu < 3) {                                  // 保证至少 3 个入声，否则全选就过
+
+        shuffle(pool.filter(function (c) { return !used[c]; })).slice(0, 3 - nRu)
+
+          .forEach(function (c) { items.push({ c: c, ru: true }); used[c] = 1; nRu++; });
+
+      }
+
+      shuffle(fe.filter(function (c) { return !used[c]; })).forEach(function (c) {
+
+        if (items.length < 15) { items.push({ c: c, ru: false }); used[c] = 1; nFe++; }
+
+      });
+
+      return shuffle(items);
+
+    }
+
+    var n = Math.min(ruCount(), pool.length, 15);
+
+    var ru = shuffle(pool).slice(0, n);
+
+    var rest = shuffle(fe).slice(0, 15 - n);
+
+    return shuffle(
+
+      ru.map(function (c) { return { c: c, ru: true }; })
+
+        .concat(rest.map(function (c) { return { c: c, ru: false }; }))
+
+    );
+
   }
+
+
+  function updateDrillCount() {
+
+    var n = ruWrongList().length, t = el('drillCount'), b = el('ruDrill');
+
+    if (t) t.textContent = n ? ('错题池 ' + n + ' 字') : '错题池已清空';
+
+    if (b) b.classList.toggle('empty', !n);
+
+  }
+
+
+
+  function enterRuReady() {
+
+    if (RU_STATE.timerId) { clearInterval(RU_STATE.timerId); RU_STATE.timerId = null; }
+
+    RU_DRILL = false;
+
+    updateDrillCount();
+
+    go('ruready');          // 缓冲界面：不显示题目、不计时
+
+  }
+
 
   function beginRu() {
     RU_STATE.items = newRuQuestion();
@@ -637,7 +1046,15 @@
     go('rusheng');          // 切到练习页（此时才显示题目）
     startRuTimer();         // 看到题目即开始计时
   }
-  el('ruBegin').addEventListener('click', beginRu);
+  el('ruBegin').addEventListener('click', function () { RU_DRILL = false; beginRu(); });
+  el('ruDrill').addEventListener('click', function () {
+    if (!ruWrongList().length) {
+      alertModal('错题已清空', '入声错题池里没有字了，去常规练习吧。', '知道了');
+      return;
+    }
+    RU_DRILL = true;
+    beginRu();
+  });
 
   function renderRu() {
     var g = el('ruGrid');
@@ -698,8 +1115,28 @@
       if (it.ru && !RU_STATE.sel[i]) miss.push(it.c);
       if (!it.ru && RU_STATE.sel[i]) extra.push(it.c);
     });
+    /* ---- 记录入声错题：漏选 / 误选；答对则从错题池清出 ---- */
+
+    RU_STATE.items.forEach(function (it, i) {
+
+      var sel = RU_STATE.sel[i];
+
+      if (it.ru && !sel) REC.ruMiss[it.c] = (REC.ruMiss[it.c] || 0) + 1;
+
+      else if (!it.ru && sel) REC.ruExtra[it.c] = (REC.ruExtra[it.c] || 0) + 1;
+
+      else { delete REC.ruMiss[it.c]; delete REC.ruExtra[it.c]; }
+
+    });
+
+    saveRec();
+
+
+
     var errs = miss.length + extra.length;
+
     RU_STATE.result = { miss: miss, extra: extra, pass: errs === 0, n: errs };
+
     markRu();
     if (RU_STATE.result.pass) playCorrect(); else playWrong();
     alertModal(RU_STATE.result.pass ? '通过' : '未通过',
@@ -788,10 +1225,31 @@
         '<div class="dual-body"><b>' + dual.join('、') + '</b> 既有入声读法，也有非入声读法；' +
         '本练习按「<b>有入声读法即算入声</b>」判定，故应选入声（仄）。</div>';
       area.appendChild(dn);
+
     }
+
+    if (RU_DRILL) {
+
+      var left = ruWrongList().length;
+
+      var dline = document.createElement('div');
+
+      dline.className = 'rline drill-note';
+
+      dline.innerHTML = '<span class="tag">错题专练</span>错题池还剩 <b>' + left + '</b> 字' +
+
+        (left ? '' : '——已清空，可以去常规练习了。');
+
+      area.appendChild(dline);
+
+    }
+
   }
 
+
+
   el('ruAgain').addEventListener('click', enterRuReady);   // 回到缓冲界面
+
 
   /* ---------- 初始化 ---------- */
   function fillMeta() {
@@ -803,9 +1261,23 @@
     var mr = el('metaRu'); if (mr) mr.textContent = (DATA.ruPool || []).length + ' 常用入声字';
   }
   fillSelect();
+
   enhancePicker('poemSelect', 'poemPicker');
+
   enhancePicker('ruTimeSelect', 'ruTimePicker');
+
+  enhancePicker('ruCountSelect', 'ruCountPicker');
+
   fillMeta();
+
   initRuTime();
+
+  renderWeakPanel();
+
+  bagHint();
+
+  updateDrillCount();
+
   go('home');
+
 })();
