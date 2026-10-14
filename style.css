@@ -388,12 +388,11 @@ select:focus { border-color:var(--gold); }
   flex:1; min-width:0; font-family:var(--kai); font-size:19px;
   color:var(--text-primary); letter-spacing:.02em;
 }
-/* 两读字：星标作上标置于该字右上角 */
-.review-poem .ru-summary .rus-ch { position:relative; display:inline-block; margin-right:.36em; }
+/* 两读字：星标作上标紧贴该字右上角
+   （用 vertical-align 抬升基线，不用绝对定位——否则会相对被行高撑高的字框定位而偏高） */
 .review-poem .ru-summary .rus-ch i {
-  position:absolute; top:-.22em; right:-.32em;
-  font-family:var(--sans); font-style:normal; font-size:13px; line-height:1;
-  color:var(--gold-ink);
+  font-family:var(--sans); font-style:normal; font-size:13px; line-height:0;
+  vertical-align:.42em; margin-left:1px; color:var(--gold-ink);
 }
 .review-poem .ru-summary .rus-note { font-size:12px; color:var(--text-light); }
 /* 本题练习次数与最好成绩 */
