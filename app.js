@@ -556,7 +556,7 @@
         html += '<div class="rus-line"><span class="rus-label">一般平仄（入声）：</span>' +
           '<span class="rus-chars">' + rest.map(mark).join('、') + '</span></div>';
       }
-      if (hasDual) html += '<div class="rus-note">＊＝另有非入声读法</div>';
+      if (hasDual) html += '<div class="rus-note">标了“*”号的字另有非入声读法</div>';
       var sum = document.createElement('div');
       sum.className = 'ru-summary';
       sum.innerHTML = html;
