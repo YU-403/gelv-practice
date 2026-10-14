@@ -306,7 +306,8 @@ select:focus { border-color:var(--gold); }
 
 /* ---------- 批改 · 作答对照区 ---------- */
 /* 平仄：全篇逐字对照（绿=正确、红=错误，误处下方小字显示你的作答） */
-.review-poem { display:flex; flex-direction:column; gap:30px; margin-top:22px; align-items:center; }
+/* gap 由 30 加大：批改页入声下标最多两行（奇偶错层），需要纵向余量 */
+.review-poem { display:flex; flex-direction:column; gap:62px; margin-top:22px; align-items:center; }
 .review-poem .line { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; }
 .review-poem .line.couplet { column-gap:30px; row-gap:26px; }
 .review-poem .line.couplet .half { display:flex; gap:6px; }
@@ -316,14 +317,22 @@ select:focus { border-color:var(--gold); }
   position:absolute; top:calc(100% + 1px); left:50%; transform:translateX(-50%);
   font-family:var(--sans); font-size:10px; color:var(--error); white-space:nowrap; letter-spacing:.02em;
 }
-/* ② 古仄今平：下标，无论对错都显示（绿=答对 / 红=答错） */
-.review-poem .trap-ref {
+/* ② 古仄今平（入声）／③ 一般平仄（入声）·两读：下标，无论对错都显示
+   注文最长 11 字，故定宽 46px 折行；相邻字以奇偶错层错开，避免压字 */
+.review-poem .trap-ref,
+.review-poem .ru-ref {
   position:absolute; top:calc(100% + 1px); left:50%; transform:translateX(-50%);
-  font-family:var(--sans); font-size:10px; white-space:nowrap; letter-spacing:.02em;
-  padding:0 3px; border-radius:3px;
+  width:50px; box-sizing:border-box; text-align:center;
+  white-space:normal; line-height:1.15; letter-spacing:0;
+  font-family:var(--sans); font-size:10px;
+  padding:0 2px; border-radius:3px;
 }
+.review-poem .ch:nth-child(even) .trap-ref,
+.review-poem .ch:nth-child(even) .ru-ref { top:calc(100% + 19px); }
 .review-poem .trap-ref.ok  { color:var(--success); background:var(--success-bg); }
 .review-poem .trap-ref.bad { color:var(--error);   background:var(--error-bg); }
+.review-poem .ru-ref.ok  { color:var(--accent-dark); background:var(--accent-light); }
+.review-poem .ru-ref.bad { color:var(--gold-ink);    background:var(--gold-light); }
 .review-legend .lg-trap { font-family:var(--sans); font-size:12px; color:var(--text-light); }
 /* 未标：灰虚线框 + 小号灰「空」 */
 .review-poem .cell.blank {

@@ -42,8 +42,8 @@
     });
     setSound(SOUND_ON);
   })();
-  var RU = new Set(DATA.rusheng || []);
-  var RU_TRAP = new Set(DATA.ruPool || []);   // ② 古仄今平：今读平声的入声字
+  var RU = new Set(DATA.rusheng || []);       // 入声全集（校正后）：批改页给仄声入声字加「（入声）」注
+  var RU_TRAP = new Set(DATA.ruPool || []);   // 古仄今平：今读平声的入声字（易误判为平）
   var RU_DUAL = new Set(DATA.ruDual || []);   // 两读字（另有非入声读法）
 
   var el = function (id) { return document.getElementById(id); };
@@ -291,7 +291,9 @@
 
   /* ---------- 批改 ---------- */
   function classify(ch, user, right) {
-    if (RU_TRAP.has(ch)) return '入声字（仄声），今读平声，易误读为平';
+    var dual = RU_DUAL.has(ch) ? '；另有非入声读法' : '';
+    if (RU_TRAP.has(ch)) return '古仄今平（入声）：今读平声，易误判' + dual;
+    if (RU.has(ch)) return '一般平仄（入声）：今读仍为仄声' + dual;
     return '一般平仄';
   }
 
@@ -349,7 +351,8 @@
       '<span class="lg"><i class="rv i-ok"></i>标对</span>' +
       '<span class="lg"><i class="rv i-bad"></i>标错</span>' +
       '<span class="lg"><i class="rv i-blank"></i>未标</span>' +
-      '<span class="lg lg-trap">下标「古仄今平」＝易误判字</span>';
+      '<span class="lg lg-trap">下标标注入声字：「古仄今平（入声）」＝今读平声、易误判；' +
+      '「一般平仄（入声）」＝今读仍为仄；「·两读」＝另有非入声读法</span>';
     area.appendChild(legend);
 
     var errSet = {};
@@ -373,7 +376,9 @@
           var right = line.tones[ci];
           var user = state.answers[li][ci];               // 本人作答：'' / '○' / '●'
           var e = errSet[li + '-' + ci];
-          var trap = RU_TRAP.has(ch);                     // ② 古仄今平
+          var trap = RU_TRAP.has(ch);                     // 入声·今读平声（易误判）
+          var ruOnly = !trap && RU.has(ch);               // 入声·今读仍为仄
+          var dualTag = RU_DUAL.has(ch) ? '·两读' : '';
           if (user === '') {                              // 未标：灰虚线 + 「空」
             cell.classList.add('blank');
             cell.textContent = '空';
@@ -383,10 +388,12 @@
           var label = null;
           if (!e) {
             if (user !== '') cell.classList.add('correct');       // 绿：标对
-            if (trap) label = { t: '古仄今平', cls: 'trap-ref ok' };
+            if (trap) label = { t: '古仄今平（入声）' + dualTag, cls: 'trap-ref ok' };
+            else if (ruOnly) label = { t: '一般平仄（入声）' + dualTag, cls: 'ru-ref ok' };
           } else {
             if (user !== '') cell.classList.add('wrong');         // 红：标错
-            if (trap) label = { t: '古仄今平', cls: 'trap-ref bad' };
+            if (trap) label = { t: '古仄今平（入声）' + dualTag, cls: 'trap-ref bad' };
+            else if (ruOnly) label = { t: '一般平仄（入声）' + dualTag, cls: 'ru-ref bad' };
             else label = { t: '应为' + (right === '○' ? '平' : '仄'), cls: 'ans-ref' };
           }
           wrap.appendChild(zi); wrap.appendChild(cell);
