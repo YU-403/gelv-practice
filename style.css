@@ -159,7 +159,7 @@ body::before {
 @keyframes pulse { 50% { opacity:.45; } }
 
 /* ---------- 模式选择 ---------- */
-.mode-wrap { display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start; position:relative; }
+.mode-wrap { display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:stretch; position:relative; }
 .mode-wrap > .mode-block { position:relative; z-index:1; }
 .mode-wrap > .mode-block:first-child { z-index:3; }
 .mode-wrap .opt { grid-column:1 / -1; }
