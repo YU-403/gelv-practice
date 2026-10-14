@@ -174,6 +174,8 @@ body::before {
 .mode-block.opt { padding:14px 22px; }
 /* 薄弱字专练：整行铺满，容纳高频错字条 */
 .mode-block.weak-block { grid-column:1 / -1; }
+.weak-actions { display:flex; align-items:center; gap:10px; }
+.btn-ghost.small { padding:8px 14px; font-size:13px; border-radius:7px; }
 .weak-list { display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; }
 .weak-chip {
   display:inline-flex; align-items:center; gap:5px;

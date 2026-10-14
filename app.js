@@ -333,7 +333,26 @@
 
   });
 
+  el('clearRec').addEventListener('click', function () {
+
+    confirmModal('清空练习记录？', '会删除错题本与成绩记录（题库数据不受影响）。', '清空', function () {
+
+      REC = { poems: {}, ze: {}, ruMiss: {}, ruExtra: {} };
+
+      saveRec();
+
+      try { localStorage.removeItem('gelv_bag'); } catch (e) {}
+
+      renderWeakPanel(); bagHint(); updateDrillCount();
+
+      toast('练习记录已清空');
+
+    });
+
+  });
+
   function renderWeakPanel() {
+
 
     var list = el('weakList'), btn = el('startWeak');
 
