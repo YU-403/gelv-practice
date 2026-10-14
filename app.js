@@ -355,6 +355,29 @@
       '「一般平仄（入声）」＝今读仍为仄；「·两读」＝另有非入声读法</span>';
     area.appendChild(legend);
 
+    // 本诗入声字清单（帮助在格律练习中一并记住入声字）
+    (function () {
+      var seen = {}, list = [];
+      state.poem.lines.forEach(function (line) {
+        line.chars.forEach(function (ch) {
+          if (!seen[ch] && (RU.has(ch) || RU_TRAP.has(ch))) { seen[ch] = 1; list.push(ch); }
+        });
+      });
+      if (!list.length) return;
+      function mark(c) { return c + (RU_DUAL.has(c) ? '＊' : ''); }
+      var traps = list.filter(function (c) { return RU_TRAP.has(c); });
+      var rest = list.filter(function (c) { return !RU_TRAP.has(c); });
+      var hasDual = list.some(function (c) { return RU_DUAL.has(c); });
+      var parts = [];
+      if (traps.length) parts.push('古仄今平（入声）：' + traps.map(mark).join('、'));
+      if (rest.length) parts.push('一般平仄（入声）：' + rest.map(mark).join('、'));
+      var sum = document.createElement('div');
+      sum.className = 'ru-summary';
+      sum.innerHTML = '本诗入声字 <b>' + list.length + '</b> 个　' + parts.join('　｜　') +
+        (hasDual ? '　（＊＝另有非入声读法）' : '');
+      area.appendChild(sum);
+    })();
+
     var errSet = {};
     state.result.errors.forEach(function (e) { errSet[e.li + '-' + e.ci] = e; });
     var lines = state.poem.lines;
