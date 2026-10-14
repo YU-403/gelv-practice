@@ -541,17 +541,25 @@
         });
       });
       if (!list.length) return;
-      function mark(c) { return c + (RU_DUAL.has(c) ? '＊' : ''); }
+      function mark(c) {          // 两读字：星标挪到该字右上角（上标）
+        return RU_DUAL.has(c) ? '<span class="rus-ch">' + c + '<i>＊</i></span>' : c;
+      }
       var traps = list.filter(function (c) { return RU_TRAP.has(c); });
       var rest = list.filter(function (c) { return !RU_TRAP.has(c); });
       var hasDual = list.some(function (c) { return RU_DUAL.has(c); });
-      var parts = [];
-      if (traps.length) parts.push('古仄今平（入声）：' + traps.map(mark).join('、'));
-      if (rest.length) parts.push('一般平仄（入声）：' + rest.map(mark).join('、'));
+      var html = '<div class="rus-title">本诗入声字 <b>' + list.length + '</b> 个</div>';
+      if (traps.length) {
+        html += '<div class="rus-line"><span class="rus-label">古仄今平（入声）：</span>' +
+          '<span class="rus-chars">' + traps.map(mark).join('、') + '</span></div>';
+      }
+      if (rest.length) {
+        html += '<div class="rus-line"><span class="rus-label">一般平仄（入声）：</span>' +
+          '<span class="rus-chars">' + rest.map(mark).join('、') + '</span></div>';
+      }
+      if (hasDual) html += '<div class="rus-note">＊＝另有非入声读法</div>';
       var sum = document.createElement('div');
       sum.className = 'ru-summary';
-      sum.innerHTML = '本诗入声字 <b>' + list.length + '</b> 个　' + parts.join('　｜　') +
-        (hasDual ? '　（＊＝另有非入声读法）' : '');
+      sum.innerHTML = html;
       area.appendChild(sum);
 
     })();

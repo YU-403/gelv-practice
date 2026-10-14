@@ -370,13 +370,32 @@ select:focus { border-color:var(--gold); }
   border-style:dashed; border-color:var(--text-light); color:var(--text-light);
   background:var(--bg-page); font-family:var(--sans); font-size:14px;
 }
-/* 本诗入声字清单（批改页顶部；帮助在格律练习中一并记住入声字） */
+/* 本诗入声字清单（批改页）：保留虚线框；内容按两种类型分两行、悬挂对齐 */
 .review-poem .ru-summary {
-  font-family:var(--sans); font-size:13px; color:var(--text-secondary); line-height:1.8;
-  text-align:center; max-width:860px; padding:8px 16px;
+  width:100%; max-width:860px; padding:10px 18px;
+  font-family:var(--sans); font-size:13px; color:var(--text-secondary); line-height:1.95;
+  text-align:left;
   border:1px dashed var(--border); border-radius:8px; background:var(--bg-card);
 }
-.review-poem .ru-summary b { color:var(--accent-dark); font-weight:600; }
+.review-poem .ru-summary .rus-title { color:var(--text-light); }
+.review-poem .ru-summary .rus-title b { color:var(--accent-dark); font-weight:600; }
+/* 两行同一起始位：标签定宽 → 字列左缘对齐；字列折行后仍与首行对齐（悬挂） */
+.review-poem .ru-summary .rus-line { display:flex; align-items:baseline; }
+.review-poem .ru-summary .rus-label {
+  flex:0 0 9.4em; font-size:12px; color:var(--text-light); white-space:nowrap;
+}
+.review-poem .ru-summary .rus-chars {
+  flex:1; min-width:0; font-family:var(--kai); font-size:19px;
+  color:var(--text-primary); letter-spacing:.02em;
+}
+/* 两读字：星标作上标置于该字右上角 */
+.review-poem .ru-summary .rus-ch { position:relative; display:inline-block; margin-right:.36em; }
+.review-poem .ru-summary .rus-ch i {
+  position:absolute; top:-.22em; right:-.32em;
+  font-family:var(--sans); font-style:normal; font-size:11px; line-height:1;
+  color:var(--gold-ink);
+}
+.review-poem .ru-summary .rus-note { font-size:12px; color:var(--text-light); }
 /* 本题练习次数与最好成绩 */
 .review-poem .poem-record { font-family:var(--sans); font-size:13px; color:var(--text-light); }
 .review-poem .poem-record b { color:var(--accent-dark); font-weight:600; }
@@ -506,7 +525,9 @@ select:focus { border-color:var(--gold); }
   .line { gap:3px; }
   .review-poem .line.couplet { row-gap:48px; }
   .review-poem .trap-ref, .review-poem .ru-ref { width:42px; }
-  .review-poem .ru-summary { font-size:12px; padding:7px 12px; }
+  .review-poem .ru-summary { font-size:12px; padding:8px 10px; }
+  .review-poem .ru-summary .rus-label { flex-basis:9.4em; }
+  .review-poem .ru-summary .rus-chars { font-size:17px; }
   .select-row { flex-direction:column; }
   .result-actions { flex-direction:column; }
 }
