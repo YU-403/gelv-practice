@@ -46,6 +46,85 @@
   var RU_TRAP = new Set(DATA.ruPool || []);   // 古仄今平：今读平声的入声字（易误判为平）
   var RU_DUAL = new Set(DATA.ruDual || []);   // 两读字（另有非入声读法）
 
+  /* ---------- 繁简显示层（只影响渲染，不参与判定）
+     数据层的键一律是简体：判定链、错题本、答案表都不受显示开关影响。
+     诗句用「位置级」繁体表（解决 发/髮、干/乾/幹、里/裏 等一字多繁体形）；
+     其他单字（字块、批改页清单、榜单、专练、入声池）用单字映射。 ---------- */
+  var TRAD = DATA.trad || { poems: {}, map: {}, expand: {} };
+  var TRAD_ON = localStorage.getItem('gelv_trad') !== 'off';   // 默认繁体（与考核卷一致）
+  function T(ch) {                        // 单字显示
+    if (!TRAD_ON) return ch;
+    return TRAD.map[ch] || ch;
+  }
+  function TPoem(pid, li, ci, ch) {        // 诗句逐字显示（位置级）
+    if (!TRAD_ON) return ch;
+    var p = TRAD.poems[pid];
+    return (p && p.l[li] && p.l[li][ci]) || T(ch);
+  }
+  function TTitle(p) {
+    if (!TRAD_ON) return p.title;
+    var t = TRAD.poems[p.id];
+    return (t && t.t) || p.title;
+  }
+  function TAuthor(p) {
+    if (!TRAD_ON) return p.author;
+    var t = TRAD.poems[p.id];
+    return (t && t.a) || p.author;
+  }
+  function ruShow(it) { return TRAD_ON ? it.c : it.k; }   // 入声题面/批改：繁显时用繁体形
+
+  function setTrad(on) {
+    TRAD_ON = on;
+    try { localStorage.setItem('gelv_trad', on ? 'on' : 'off'); } catch (e) {}
+    var ic = document.getElementById('tradIcon');
+    if (ic) ic.textContent = on ? '繁' : '简';
+    var b = document.getElementById('tradToggle');
+    if (b) {
+      b.classList.toggle('off', !on);
+      b.title = on ? '当前显示繁体（与考核卷一致），点击切换为简体'
+                   : '当前显示简体，点击切换为繁体';
+      b.setAttribute('aria-label', b.title);
+    }
+  }
+
+  /* 切换繁简后，把当前页面上所有数据驱动的字重画一遍（进度、计时不受影响） */
+  function refreshPickers() {
+    [['poemSelect', 'poemPicker'], ['ruTimeSelect', 'ruTimePicker'],
+     ['ruCountSelect', 'ruCountPicker']].forEach(function (pair) {
+      var sel = el(pair[0]), host = el(pair[1]);
+      if (!sel || !host) return;
+      Array.prototype.forEach.call(host.querySelectorAll('.picker-opt'), function (o) {
+        var op = sel.querySelector('option[value="' + o.dataset.value + '"]');
+        if (op) o.textContent = op.textContent;
+      });
+      var cur = sel.options[sel.selectedIndex];
+      var vs = host.querySelector('.picker-value');
+      if (vs && cur) vs.textContent = cur.textContent;
+    });
+  }
+
+  function applyTrad() {
+    fillSelect();
+    refreshPickers();
+    var pg = activePage();
+    if (pg === 'page-practice' && state.poem) repaintPoem();
+    else if (pg === 'page-result') renderPoemReview();
+    else if (pg === 'page-zedrill') renderZeGrid();
+    else if (pg === 'page-zedrillresult') renderZeResult();
+    else if (pg === 'page-rusheng') renderRu();
+    else if (pg === 'page-ruresult') { renderRuGridReview(); renderRuResult(); }
+    renderWeakPanel();
+  }
+  (function initTrad() {
+    var b = document.getElementById('tradToggle');
+    if (b) b.addEventListener('click', function () {
+      setTrad(!TRAD_ON);
+      applyTrad();
+      playClick();
+    });
+    setTrad(TRAD_ON);
+  })();
+
 
 
   /* ---------- 练习记录：错题本与成绩（localStorage） ---------- */
@@ -148,7 +227,7 @@
       groups[cat].forEach(function (p) {
         var o = document.createElement('option');
         o.value = p.id;
-        o.textContent = p.title + ' · ' + p.author;
+        o.textContent = TTitle(p) + ' · ' + TAuthor(p);
         og.appendChild(o);
       });
       sel.appendChild(og);
@@ -233,8 +312,8 @@
     state.poem = poem;
     state.answers = poem.lines.map(function (l) { return l.chars.map(function () { return ''; }); });
     state.result = null;
-    el('practiceTitle').textContent = poem.title;
-    el('practiceSub').textContent = poem.author + ' · ' + poem.category + ' · ' + poem.lines.length + ' 句';
+    el('practiceTitle').textContent = TTitle(poem);
+    el('practiceSub').textContent = TAuthor(poem) + ' · ' + poem.category + ' · ' + poem.lines.length + ' 句';
     renderPoem();
     go('practice');          // 先切页（go 会清掉上一题的计时器）
     startTimerIfNeeded();    // 再启动本题计时
@@ -297,21 +376,14 @@
   function zeNext() { if (ZE.cur + 1 < ZE.chars.length) zeCursor(ZE.cur + 1); }
   function zePrev() { if (ZE.cur > 0) { zeSet(ZE.cur - 1, ''); zeCursor(ZE.cur - 1); } }
 
-  function startZeDrill() {
-    var pool = zeWeakPool().slice(0, 12);
-    if (!pool.length) {
-      alertModal('暂无薄弱字', '先练几首——标错的字会自动记入错题本。', '知道了');
-      return;
-    }
-    ZE.chars = pool;
-    ZE.ans = pool.map(function () { return ''; });
-    ZE.result = null;
+  function renderZeGrid() {
     var g = el('zeGrid');
+    if (!g) return;
     g.innerHTML = '';
-    pool.forEach(function (ch, i) {
+    ZE.chars.forEach(function (ch, i) {
       var wrap = document.createElement('div');
       wrap.className = 'ch';
-      var zi = document.createElement('span'); zi.className = 'zi'; zi.textContent = ch;
+      var zi = document.createElement('span'); zi.className = 'zi'; zi.textContent = T(ch);
       var cell = document.createElement('div'); cell.className = 'cell'; cell.dataset.i = i;
       cell.addEventListener('click', function () {
         if (ZE.result) return;
@@ -322,6 +394,21 @@
       wrap.appendChild(zi); wrap.appendChild(cell);
       g.appendChild(wrap);
     });
+    ZE.ans.forEach(function (v, i) { if (v) zePaint(i); });   // 切换繁简后保留已作答
+    zeCursor(ZE.cur);
+  }
+
+  function startZeDrill() {
+    var pool = zeWeakPool().slice(0, 12);
+    if (!pool.length) {
+      alertModal('暂无薄弱字', '先练几首——标错的字会自动记入错题本。', '知道了');
+      return;
+    }
+    ZE.chars = pool;
+    ZE.ans = pool.map(function () { return ''; });
+    ZE.result = null;
+    ZE.cur = 0;
+    renderZeGrid();
     el('zeDrillSub').textContent = '下列 ' + pool.length + ' 个字都是你标错过的——点击格子标出它的平仄';
     zeCursor(0);
     go('zedrill');
@@ -362,7 +449,7 @@
       var ok = zeIsRight(ch, ZE.ans[i]);
       var d = document.createElement('div');
       d.className = 'ze-item ' + (ok ? 'ok' : 'bad');
-      d.innerHTML = '<span class="ze-ch">' + ch + '</span>' +
+      d.innerHTML = '<span class="ze-ch">' + T(ch) + '</span>' +
         '<span class="ze-my">' + (ZE.ans[i] || '空') + '</span>' +
         '<span class="ze-key">' + zeKeyText(ch) + '</span>' +
         (zeTags(ch) ? '<span class="ze-tag">' + zeTags(ch) + '</span>' : '');
@@ -395,7 +482,7 @@
     }
     if (btn) btn.disabled = false;
     list.innerHTML = weak.map(function (c) {
-      return '<span class="weak-chip">' + c + '<i>' + REC.ze[c].n + '</i></span>';
+      return '<span class="weak-chip">' + T(c) + '<i>' + REC.ze[c].n + '</i></span>';
     }).join('');
   }
 
@@ -404,7 +491,7 @@
   });
 
   /* ---------- 渲染诗句 + 格子 ---------- */
-  function renderPoem() {
+  function renderPoem(noAnim) {
     var area = el('poemArea');
     area.innerHTML = '';
     var lines = state.poem.lines;
@@ -421,7 +508,8 @@
         line.chars.forEach(function (ch, ci) {
           var wrap = document.createElement('div');
           wrap.className = 'ch';
-          var zi = document.createElement('span'); zi.className = 'zi'; zi.textContent = ch;
+          var zi = document.createElement('span');
+          zi.className = 'zi'; zi.textContent = TPoem(state.poem.id, li, ci, ch);
           var cell = document.createElement('div');
           cell.className = 'cell';
           cell.dataset.li = li; cell.dataset.ci = ci;
@@ -433,8 +521,22 @@
       }
       area.appendChild(row);
     }
-    stagger(area.querySelectorAll('.line'), 0.07);   // 逐联错落入场
+    if (!noAnim) stagger(area.querySelectorAll('.line'), 0.07);   // 逐联错落入场
     setCursor(0, 0);                                 // 键盘光标回到首格
+  }
+
+  /* 切换繁简后重画练习页：保留作答、批改结果与键盘光标 */
+  function repaintPoem() {
+    var keep = { li: state.cursor.li, ci: state.cursor.ci };
+    el('practiceTitle').textContent = TTitle(state.poem);
+    el('practiceSub').textContent = TAuthor(state.poem) + ' · ' + state.poem.category +
+      ' · ' + state.poem.lines.length + ' 句';
+    renderPoem(true);
+    state.answers.forEach(function (row, li) {
+      row.forEach(function (v, ci) { if (v) paint(li, ci); });
+    });
+    if (state.result) markPoem();
+    setCursor(keep.li, keep.ci);
   }
 
   function cycle(cell, li, ci) {
@@ -650,18 +752,23 @@
     // 本诗入声字清单（帮助在格律练习中一并记住入声字）
     (function () {
       var seen = {}, list = [];
-      state.poem.lines.forEach(function (line) {
-        line.chars.forEach(function (ch) {
-          if (!seen[ch] && (RU.has(ch) || RU_TRAP.has(ch))) { seen[ch] = 1; list.push(ch); }
+      state.poem.lines.forEach(function (line, li) {
+        line.chars.forEach(function (ch, ci) {
+          if (!RU.has(ch) && !RU_TRAP.has(ch)) return;
+          var d = TPoem(state.poem.id, li, ci, ch);   // 显示形按位置取（发/髮、干/乾/幹 …）
+          var key = ch + '|' + d;
+          if (seen[key]) return;
+          seen[key] = 1; list.push({ k: ch, d: d });
         });
       });
       if (!list.length) return;
-      function mark(c) {          // 两读字：星标挪到该字右上角（上标）
-        return RU_DUAL.has(c) ? '<span class="rus-ch">' + c + '<i>*</i></span>' : c;
+      function mark(o) {          // 两读字：星标挪到该字右上角（上标）
+        return RU_DUAL.has(o.k)
+          ? '<span class="rus-ch">' + o.d + '<i>*</i></span>' : o.d;
       }
-      var traps = list.filter(function (c) { return RU_TRAP.has(c); });
-      var rest = list.filter(function (c) { return !RU_TRAP.has(c); });
-      var hasDual = list.some(function (c) { return RU_DUAL.has(c); });
+      var traps = list.filter(function (o) { return RU_TRAP.has(o.k); });
+      var rest = list.filter(function (o) { return !RU_TRAP.has(o.k); });
+      var hasDual = list.some(function (o) { return RU_DUAL.has(o.k); });
       var html = '<div class="rus-title">本诗入声字 <b>' + list.length + '</b> 个</div>';
       if (traps.length) {
         html += '<div class="rus-line"><span class="rus-label">古仄今平（入声）：</span>' +
@@ -708,7 +815,8 @@
         line.chars.forEach(function (ch, ci) {
           var wrap = document.createElement('div');
           wrap.className = 'ch';
-          var zi = document.createElement('span'); zi.className = 'zi'; zi.textContent = ch;
+          var zi = document.createElement('span');
+          zi.className = 'zi'; zi.textContent = TPoem(state.poem.id, li, ci, ch);
           var cell = document.createElement('div'); cell.className = 'cell';
           var right = line.tones[ci];
           var user = state.answers[li][ci];               // 本人作答：'' / '○' / '●'
@@ -933,6 +1041,12 @@
 
 
 
+  /* 出题项：k = 简体键（判定/错题本用），c = 显示字形（繁显时可能是展开出的另一种繁体形） */
+  function ruItem(k, ru) {
+    var forms = (TRAD.expand && TRAD.expand[k]) || [(TRAD.map && TRAD.map[k]) || k];
+    return { k: k, c: forms[Math.floor(Math.random() * forms.length)], ru: ru };
+  }
+
   function newRuQuestion() {
     var pool = (DATA.ruPool || []).slice();
     var fe = (DATA.feiruPool || []).slice();
@@ -940,24 +1054,24 @@
       var items = [], used = {}, nRu = 0, nFe = 0;
       ruWrongList().forEach(function (c) {
         if (items.length >= 15 || used[c]) return;
-        if (pool.indexOf(c) >= 0) { if (nRu < 12) { items.push({ c: c, ru: true }); used[c] = 1; nRu++; } }
-        else if (fe.indexOf(c) >= 0) { if (nFe < 12) { items.push({ c: c, ru: false }); used[c] = 1; nFe++; } }
+        if (pool.indexOf(c) >= 0) { if (nRu < 12) { items.push(ruItem(c, true)); used[c] = 1; nRu++; } }
+        else if (fe.indexOf(c) >= 0) { if (nFe < 12) { items.push(ruItem(c, false)); used[c] = 1; nFe++; } }
       });
       if (nRu < 3) {                                  // 保证至少 3 个入声，否则全选就过
         shuffle(pool.filter(function (c) { return !used[c]; })).slice(0, 3 - nRu)
-          .forEach(function (c) { items.push({ c: c, ru: true }); used[c] = 1; nRu++; });
+          .forEach(function (c) { items.push(ruItem(c, true)); used[c] = 1; nRu++; });
       }
       shuffle(fe.filter(function (c) { return !used[c]; })).forEach(function (c) {
-        if (items.length < 15) { items.push({ c: c, ru: false }); used[c] = 1; nFe++; }
+        if (items.length < 15) { items.push(ruItem(c, false)); used[c] = 1; nFe++; }
       });
       return shuffle(items);
     }
     var n = Math.min(ruCount(), pool.length, 15);
-    var ru = shuffle(pool).slice(0, n);
-    var rest = shuffle(fe).slice(0, 15 - n);
+    var ru = shuffle(pool.slice()).slice(0, n);
+    var rest = shuffle(fe.slice()).slice(0, 15 - n);
     return shuffle(
-      ru.map(function (c) { return { c: c, ru: true }; })
-        .concat(rest.map(function (c) { return { c: c, ru: false }; }))
+      ru.map(function (c) { return ruItem(c, true); })
+        .concat(rest.map(function (c) { return ruItem(c, false); }))
     );
   }
 
@@ -1003,12 +1117,14 @@
 
   function renderRu() {
     var g = el('ruGrid');
+    if (!g) return;
     g.innerHTML = '';
     RU_STATE.items.forEach(function (it, i) {
       var d = document.createElement('button');
       d.className = 'ru-ch';
-      d.textContent = it.c;
+      d.textContent = ruShow(it);
       d.dataset.i = i;
+      if (RU_STATE.sel[i]) d.classList.add('selected');   // 切换繁简后保留已选
       d.addEventListener('click', function () {
         if (RU_STATE.result) return;
         RU_STATE.sel[i] = !RU_STATE.sel[i];
@@ -1019,6 +1135,7 @@
       g.appendChild(d);
     });
     stagger(g.querySelectorAll('.ru-ch'), 0.03, 'pop-in');   // 字块错落弹出
+    if (RU_STATE.result) markRu();                           // 已批改：恢复对错标记
   }
 
   function startRuTimer() {
@@ -1057,15 +1174,15 @@
     if (RU_STATE.timerId) { clearInterval(RU_STATE.timerId); RU_STATE.timerId = null; }
     var miss = [], extra = [];
     RU_STATE.items.forEach(function (it, i) {
-      if (it.ru && !RU_STATE.sel[i]) miss.push(it.c);
-      if (!it.ru && RU_STATE.sel[i]) extra.push(it.c);
+      if (it.ru && !RU_STATE.sel[i]) miss.push(it);
+      if (!it.ru && RU_STATE.sel[i]) extra.push(it);
     });
     /* ---- 记录入声错题：漏选 / 误选；答对则从错题池清出 ---- */
     RU_STATE.items.forEach(function (it, i) {
       var sel = RU_STATE.sel[i];
-      if (it.ru && !sel) REC.ruMiss[it.c] = (REC.ruMiss[it.c] || 0) + 1;
-      else if (!it.ru && sel) REC.ruExtra[it.c] = (REC.ruExtra[it.c] || 0) + 1;
-      else { delete REC.ruMiss[it.c]; delete REC.ruExtra[it.c]; }
+      if (it.ru && !sel) REC.ruMiss[it.k] = (REC.ruMiss[it.k] || 0) + 1;
+      else if (!it.ru && sel) REC.ruExtra[it.k] = (REC.ruExtra[it.k] || 0) + 1;
+      else { delete REC.ruMiss[it.k]; delete REC.ruExtra[it.k]; }
     });
     saveRec();
 
@@ -1098,7 +1215,7 @@
     RU_STATE.items.forEach(function (it, i) {
       var d = document.createElement('div');
       d.className = 'ru-ch';
-      d.textContent = it.c;
+      d.textContent = ruShow(it);
       var sel = RU_STATE.sel[i];
       var tag = '';
       if (it.ru && sel) { d.classList.add('correct'); tag = '✓'; }        // 入声·选中（对）
@@ -1110,7 +1227,7 @@
         b.className = 'ru-badge'; b.textContent = tag;
         d.appendChild(b);
       }
-      if (RU_DUAL.has(it.c)) {                 // 两读字：额外加角标
+      if (RU_DUAL.has(it.k)) {                 // 两读字：额外加角标
         d.classList.add('dual');
         var db = document.createElement('span');
         db.className = 'ru-badge dual-badge'; db.textContent = '两读';
@@ -1142,20 +1259,20 @@
       box.className = 'rline';
       var errs = document.createElement('div');
       errs.className = 'errs';
-      r.miss.forEach(function (c) {
-        errs.innerHTML += '<div class="err-item"><span class="c">' + c + '</span>是<b>入声字</b>（仄），你漏选了' +
+      r.miss.forEach(function (it) {
+        errs.innerHTML += '<div class="err-item"><span class="c">' + ruShow(it) + '</span>是<b>入声字</b>（仄），你漏选了' +
           '<span class="type">今读平声，易误判</span></div>';
       });
-      r.extra.forEach(function (c) {
-        errs.innerHTML += '<div class="err-item"><span class="c">' + c + '</span>不是入声字，你误选了' +
+      r.extra.forEach(function (it) {
+        errs.innerHTML += '<div class="err-item"><span class="c">' + ruShow(it) + '</span>不是入声字，你误选了' +
           '<span class="type">一般平仄</span></div>';
       });
       box.appendChild(errs);
       area.appendChild(box);
     }
     // 本轮出现的两读字：无论对错都说明（另有非入声读法，按口径仍算入声）
-    var dual = RU_STATE.items.filter(function (it) { return it.ru && RU_DUAL.has(it.c); })
-      .map(function (it) { return it.c; });
+    var dual = RU_STATE.items.filter(function (it) { return it.ru && RU_DUAL.has(it.k); })
+      .map(ruShow);
     if (dual.length) {
       var dn = document.createElement('div');
       dn.className = 'rline dual-note';

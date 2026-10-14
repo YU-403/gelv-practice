@@ -84,6 +84,15 @@ body::before {
 }
 .sound-toggle:hover { opacity: 1; background: color-mix(in srgb, #fff 15%, transparent); }
 .sound-toggle.off { opacity: .55; }
+.trad-toggle {
+  position: absolute; right: 40px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; font-size: 14px; line-height: 1;
+  font-family: var(--serif, inherit); padding: 3px 6px; border-radius: 6px;
+  opacity: .85; transition: opacity .2s, background .2s;
+}
+.trad-toggle:hover { opacity: 1; background: color-mix(in srgb, #fff 15%, transparent); }
+.trad-toggle.off { opacity: .55; }
+.bar-hint-sm { display: none; }
 
 /* ---------- 首页 ---------- */
 .home-wrap { padding-top: 6vh; }
@@ -534,6 +543,10 @@ select:focus { border-color:var(--gold); }
 
 /* ---------- 响应式 ---------- */
 @media (max-width: 640px) {
+  /* 顶栏右侧有两个按钮：窄屏只留短标题，避免文字与按钮相撞 */
+  .bar-hint { display:none; }
+  .bar-hint-sm { display:inline; }
+  .top-bar { text-align:left; justify-content:flex-start; padding-left:12px; }
   .module-grid { grid-template-columns:1fr; }
   .mode-wrap { grid-template-columns:1fr; }
   .site-head h1 { font-size:30px; }
