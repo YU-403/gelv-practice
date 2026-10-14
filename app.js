@@ -542,7 +542,7 @@
       });
       if (!list.length) return;
       function mark(c) {          // 两读字：星标挪到该字右上角（上标）
-        return RU_DUAL.has(c) ? '<span class="rus-ch">' + c + '<i>＊</i></span>' : c;
+        return RU_DUAL.has(c) ? '<span class="rus-ch">' + c + '<i>*</i></span>' : c;
       }
       var traps = list.filter(function (c) { return RU_TRAP.has(c); });
       var rest = list.filter(function (c) { return !RU_TRAP.has(c); });

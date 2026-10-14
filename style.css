@@ -392,7 +392,7 @@ select:focus { border-color:var(--gold); }
 .review-poem .ru-summary .rus-ch { position:relative; display:inline-block; margin-right:.36em; }
 .review-poem .ru-summary .rus-ch i {
   position:absolute; top:-.22em; right:-.32em;
-  font-family:var(--sans); font-style:normal; font-size:11px; line-height:1;
+  font-family:var(--sans); font-style:normal; font-size:13px; line-height:1;
   color:var(--gold-ink);
 }
 .review-poem .ru-summary .rus-note { font-size:12px; color:var(--text-light); }
