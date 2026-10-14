@@ -804,7 +804,6 @@
   function ruCount() {
     var v = el('ruCountSelect') ? el('ruCountSelect').value : 'exam';
     if (v === 'exam') return 3 + Math.floor(Math.random() * 4);      // 考核档：3–6
-    if (v === 'random') return 3 + Math.floor(Math.random() * 10);   // 随机 3–12
     return parseInt(v, 10) || 3;
 
   }
