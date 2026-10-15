@@ -50,7 +50,7 @@ body::before {
 }
 @keyframes bg-drift { from{transform:translate3d(-1.5%,-1%,0)} to{transform:translate3d(1.5%,1%,0)} }
 
-.app { max-width: 860px; margin: 0 auto; padding: calc(var(--dock-bottom) - 36px + 6px) 16px 40px; }
+.app { max-width: 860px; margin: 0 auto; padding: 0 16px 40px; }
 .page { display:none; animation: fade-in .3s ease both; }
 .page.active { display:block; }
 @keyframes fade-in { from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none} }
@@ -83,7 +83,7 @@ body::before {
 :root {
   --dock-top: 46px;        /* 工具组上边（蓝条 36px + 10px） */
   --dock-size: 46px;       /* 方形按钮边长 */
-  --dock-bottom: 110px;    /* 工具组下边（含边框）再留 4px 余量，页面内容/粘性标题栏都从这里开始 */
+  --dock-bottom: 110px;    /* 工具组下边（含边框）——仅用于窄屏给标题栏预留右侧宽度 */
 }
 .tool-dock {
   position: fixed; top: var(--dock-top); right: 14px; z-index: 30;
@@ -209,8 +209,12 @@ body::before {
 /* ---------- 顶栏 ---------- */
 .bar {
   display:flex; align-items:center; gap:12px; padding:16px 4px;
-  border-bottom:1px solid var(--border-light); margin-bottom:20px; position:sticky; top:var(--dock-bottom);
+  border-bottom:1px solid var(--border-light); margin-bottom:20px; position:sticky; top:0;
   background: color-mix(in srgb, var(--bg-page) 88%, transparent); backdrop-filter: blur(6px); z-index:20;
+}
+/* 视口不够宽时，工具组会盖到标题栏右侧，给标题栏留出右侧空白（不改变内容高度） */
+@media (max-width: 1120px) {
+  .bar { padding-right: calc(var(--dock-size) * 2 + 44px); }
 }
 .bar h2 { font-family:var(--sans); font-size:19px; font-weight:700; letter-spacing:.06em; }
 .bar-spacer { flex:1; }
@@ -615,6 +619,12 @@ select:focus { border-color:var(--gold); }
   .tool-glyph { font-size: 17px; }
   .tool-cap { font-size: 8px; }
   .spk { width: 18px; height: 18px; }
+  /* 窄屏：标题栏要同时放下 返回/标题/倒计时/工具组，收紧标题栏内元素 */
+  .bar { gap: 8px; }
+  .bar h2 { font-size: 16px; }
+  .tb-label { display: none; }        /* 省掉「剩余」二字 */
+  .timer { font-size: 20px; }
+  .timer-box { padding: 5px 12px; }
   .module-grid { grid-template-columns:1fr; }
   .mode-wrap { grid-template-columns:1fr; }
   .site-head h1 { font-size:30px; }
