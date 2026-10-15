@@ -52,15 +52,15 @@
      其他单字（字块、批改页清单、榜单、专练、入声池）用单字映射。 ---------- */
   var TRAD = DATA.trad || { poems: {}, map: {}, expand: {} };
   var TRAD_ON = localStorage.getItem('gelv_trad') !== 'off';   // 默认繁体（与考核卷一致）
+  function tradOf(ch) { return TRAD.map[ch] || ch; }           // 单字繁体形（与显示开关无关）
   function T(ch) {                        // 单字显示
-    if (!TRAD_ON) return ch;
-    return TRAD.map[ch] || ch;
+    return TRAD_ON ? tradOf(ch) : ch;
   }
-  function TPoem(pid, li, ci, ch) {        // 诗句逐字显示（位置级）
-    if (!TRAD_ON) return ch;
+  function TPoemTrad(pid, li, ci, ch) {    // 诗句逐字繁体形（位置级，与显示开关无关）
     var p = TRAD.poems[pid];
-    return (p && p.l[li] && p.l[li][ci]) || T(ch);
+    return (p && p.l[li] && p.l[li][ci]) || tradOf(ch);
   }
+  function TPoem(pid, li, ci, ch) { return TRAD_ON ? TPoemTrad(pid, li, ci, ch) : ch; }
   function TTitle(p) {
     if (!TRAD_ON) return p.title;
     var t = TRAD.poems[p.id];
@@ -152,6 +152,16 @@
   function saveRec() { try { localStorage.setItem('gelv_records', JSON.stringify(REC)); } catch (e) {} }
   function weakZe() {                      // 未掌握的平仄错字，按错误次数降序
     return Object.keys(REC.ze).sort(function (a, b) { return REC.ze[b].n - REC.ze[a].n; });
+  }
+  /* 榜单与专练里显示哪个字形：优先用「这个字在诗里被判错时的那个形」
+     （诗里是 白髮/枝幹/漫捲 就显示 髮/幹/捲，而不是单字默认形 發/干/卷）；
+     旧记录没有 d 字段、或切到简体显示时，回落到单字映射。 */
+  function weakGlyph(ch) {
+    return TRAD_ON ? weakTrad(ch) : ch;
+  }
+  function weakTrad(ch) {                  // 与显示开关无关的「繁体形」
+    var r = REC.ze[ch];
+    return (r && r.d) || tradOf(ch);
   }
   function ruWrongList() {                 // 入声错题池（漏选 + 误选）
     var n = {};
@@ -349,7 +359,7 @@
      出题不带诗句语境；答案取该字的平水韵平仄
      （data.charTone：p 平 / z 仄 / pz 平仄两读两可）；
      答对一次即从错题本移出，答错则错误次数 +1。 ================= */
-  var ZE = { chars: [], ans: [], cur: 0, result: null };
+  var ZE = { chars: [], trads: [], ans: [], cur: 0, result: null };
 
   function zeKey(ch) { return (DATA.charTone || {})[ch] || null; }
   function zeWeakPool() { return weakZe().filter(function (c) { return !!zeKey(c); }); }
@@ -362,8 +372,8 @@
     var k = zeKey(ch);
     return k === 'p' ? '平' : k === 'z' ? '仄' : '平/仄 两可';
   }
-  function zeTags(ch) {
-    var f = ruFlags(ch, T(ch));
+  function zeTags(ch, glyph) {
+    var f = ruFlags(ch, glyph || weakGlyph(ch));
     var t = [];
     if (f.ru) t.push('入声');
     if (zeKey(ch) === 'pz' || f.dual) t.push('两读');
@@ -397,7 +407,8 @@
     ZE.chars.forEach(function (ch, i) {
       var wrap = document.createElement('div');
       wrap.className = 'ch';
-      var zi = document.createElement('span'); zi.className = 'zi'; zi.textContent = T(ch);
+      var zi = document.createElement('span');
+      zi.className = 'zi'; zi.textContent = TRAD_ON ? ZE.trads[i] : ch;
       var cell = document.createElement('div'); cell.className = 'cell'; cell.dataset.i = i;
       cell.addEventListener('click', function () {
         if (ZE.result) return;
@@ -419,6 +430,7 @@
       return;
     }
     ZE.chars = pool;
+    ZE.trads = pool.map(weakTrad);      // 记下每个字在诗里的形（专练页与结果页都用它）
     ZE.ans = pool.map(function () { return ''; });
     ZE.result = null;
     ZE.cur = 0;
@@ -442,7 +454,11 @@
     var right = 0, wrong = 0;
     ZE.chars.forEach(function (ch, i) {
       if (zeIsRight(ch, ZE.ans[i])) { right++; delete REC.ze[ch]; }   // 答对一次即移出
-      else { wrong++; REC.ze[ch] = { n: ((REC.ze[ch] || {}).n || 0) + 1, streak: 0 }; }
+      else {                            // 答错：计数 +1，字形沿用记录里已有的那个
+        wrong++;
+        REC.ze[ch] = { n: ((REC.ze[ch] || {}).n || 0) + 1, streak: 0,
+                       d: (REC.ze[ch] || {}).d };
+      }
     });
     saveRec();
     ZE.result = { right: right, wrong: wrong, total: ZE.chars.length };
@@ -461,12 +477,13 @@
     g.innerHTML = '';
     ZE.chars.forEach(function (ch, i) {
       var ok = zeIsRight(ch, ZE.ans[i]);
+      var show = TRAD_ON ? ZE.trads[i] : ch;      // 用「诗里出现的那个形」，不随答题结果变
       var d = document.createElement('div');
       d.className = 'ze-item ' + (ok ? 'ok' : 'bad');
-      d.innerHTML = '<span class="ze-ch">' + T(ch) + '</span>' +
+      d.innerHTML = '<span class="ze-ch">' + show + '</span>' +
         '<span class="ze-my">' + (ZE.ans[i] || '空') + '</span>' +
         '<span class="ze-key">' + zeKeyText(ch) + '</span>' +
-        (zeTags(ch) ? '<span class="ze-tag">' + zeTags(ch) + '</span>' : '');
+        (zeTags(ch, show) ? '<span class="ze-tag">' + zeTags(ch, show) + '</span>' : '');
       g.appendChild(d);
     });
     el('zeDrillNote').innerHTML = '<div class="rline"><span class="tag">错题本</span>本次移出 <b>' +
@@ -496,7 +513,7 @@
     }
     if (btn) btn.disabled = false;
     list.innerHTML = weak.map(function (c) {
-      return '<span class="weak-chip">' + T(c) + '<i>' + REC.ze[c].n + '</i></span>';
+      return '<span class="weak-chip">' + weakGlyph(c) + '<i>' + REC.ze[c].n + '</i></span>';
     }).join('');
   }
 
@@ -706,7 +723,10 @@
       line.chars.forEach(function (ch, ci) {
         var a = state.answers[li][ci];
         var ok = a !== '' && a === line.tones[ci];
-        if (!ok) { REC.ze[ch] = { n: ((REC.ze[ch] || {}).n || 0) + 1, streak: 0 }; }
+        if (!ok) {          // 记下「这个字在这首诗里的显示形」，错题本/专练按它显示
+          REC.ze[ch] = { n: ((REC.ze[ch] || {}).n || 0) + 1, streak: 0,
+                         d: TPoemTrad(state.poem.id, li, ci, ch) };
+        }
         else if (REC.ze[ch]) {
           REC.ze[ch].streak = (REC.ze[ch].streak || 0) + 1;
           if (REC.ze[ch].streak >= 2) delete REC.ze[ch];   // 连续答对 2 次 → 移出错题本
