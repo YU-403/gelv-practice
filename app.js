@@ -25,23 +25,68 @@
       osc.start(t0); osc.stop(t0 + dur);
     } catch (e) {}
   }
+  function sweep(f1, f2, type, dur, vol) {      // 滑音（用于「切换」「清空」这类状态音）
+    if (!SOUND_ON) return;
+    try {
+      var ctx = getAudioCtx(); if (!ctx) return;
+      var t0 = ctx.currentTime;
+      var osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = type;
+      osc.frequency.setValueAtTime(f1, t0);
+      osc.frequency.linearRampToValueAtTime(f2, t0 + dur);
+      gain.gain.setValueAtTime(vol, t0);
+      gain.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+      osc.start(t0); osc.stop(t0 + dur);
+    } catch (e) {}
+  }
+  /* ---- 答题区音效（保持原样：sine 880 / 660+880 / 200 锯齿）---- */
   function playClick()   { beep(880, 'sine', 0.06, 0.15, 0); }
   function playCorrect() { beep(660, 'sine', 0.25, 0.12, 0); beep(880, 'sine', 0.25, 0.12, 0.1); }
   function playWrong()   { beep(200, 'sawtooth', 0.3, 0.1, 0); }
+  /* ---- UI 操作音效：音高更低、时长更短、音色 triangle/square，与答题区错开 ----
+     音量也比答题音低一档，避免抢戏 */
+  function playNav()    { beep(530, 'triangle', 0.09, 0.07, 0);    beep(790, 'triangle', 0.10, 0.055, 0.085); }
+  function playStart()  { beep(660, 'triangle', 0.10, 0.075, 0);   beep(990, 'triangle', 0.12, 0.06, 0.10);
+                          beep(1320, 'sine', 0.16, 0.03, 0.20); }
+  function playSubmit() { beep(440, 'square', 0.06, 0.055, 0);     beep(440, 'square', 0.06, 0.05, 0.075); }
+  function playUi()     { beep(520, 'triangle', 0.028, 0.055, 0); }
+  function playToggle() { sweep(700, 1000, 'triangle', 0.12, 0.065); }
+  function playClear()  { sweep(400, 180, 'sine', 0.2, 0.07); }
   function setSound(on) {
     SOUND_ON = on;
-    localStorage.setItem('gelv_sound', on ? 'on' : 'off');
-    var ic = document.getElementById('soundIcon'); if (ic) ic.textContent = on ? '🔊' : '🔇';
-    var b = document.getElementById('soundToggle'); if (b) b.classList.toggle('off', !on);
+    try { localStorage.setItem('gelv_sound', on ? 'on' : 'off'); } catch (e) {}
+    var b = document.getElementById('soundToggle');
+    if (b) {
+      b.classList.toggle('off', !on);
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      b.title = on ? '音效开：点击静音' : '已静音：点击开启音效';
+      b.setAttribute('aria-label', b.title);
+    }
+    var cap = document.getElementById('soundCap');
+    if (cap) cap.textContent = on ? '音效' : '静音';
   }
   (function initSound() {
     var b = document.getElementById('soundToggle');
     if (b) b.addEventListener('click', function () {
       setSound(!SOUND_ON);
-      if (SOUND_ON) playClick();   // 开启时给个反馈
+      if (SOUND_ON) playToggle();          // 开启时给个反馈；关闭时静默
+      shake(b);
     });
     setSound(SOUND_ON);
   })();
+  /* 工具按钮的小动效：涟漪 + 抖动（类名用完即摘，避免残留） */
+  function ripple(b) {
+    if (!b) return;
+    b.classList.remove('ripple'); void b.offsetWidth; b.classList.add('ripple');
+    setTimeout(function () { b.classList.remove('ripple'); }, 460);
+  }
+  function shake(b) {
+    if (!b) return;
+    b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
+    setTimeout(function () { b.classList.remove('shake'); }, 320);
+  }
   var RU = new Set(DATA.rusheng || []);       // 入声全集（校正后）：批改页给仄声入声字加「（入声）」注
   var RU_TRAP = new Set(DATA.ruPool || []);   // 古仄今平：今读平声的入声字（易误判为平）
   var RU_DUAL = new Set(DATA.ruDual || []);   // 两读字（另有非入声读法）
@@ -91,9 +136,13 @@
     try { localStorage.setItem('gelv_trad', on ? 'on' : 'off'); } catch (e) {}
     var ic = document.getElementById('tradIcon');
     if (ic) ic.textContent = on ? '繁' : '简';
+    var cap = document.getElementById('tradCap');
+    if (cap) cap.textContent = on ? '繁体' : '简体';
     var b = document.getElementById('tradToggle');
     if (b) {
+      b.classList.toggle('on', on);
       b.classList.toggle('off', !on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
       b.title = on ? '当前显示繁体（与考核卷一致），点击切换为简体'
                    : '当前显示简体，点击切换为繁体';
       b.setAttribute('aria-label', b.title);
@@ -133,9 +182,32 @@
     if (b) b.addEventListener('click', function () {
       setTrad(!TRAD_ON);
       applyTrad();
-      playClick();
+      playToggle();
+      ripple(b);
+      if (b) {                                    // 字形翻牌动画
+        b.classList.remove('flip'); void b.offsetWidth; b.classList.add('flip');
+        setTimeout(function () { b.classList.remove('flip'); }, 320);
+      }
     });
     setTrad(TRAD_ON);
+  })();
+
+  /* ---------- UI 操作音效接线（答题区音效不受影响） ---------- */
+  (function initUiSound() {
+    function bind(sel, fn) {
+      Array.prototype.forEach.call(document.querySelectorAll(sel), function (n) {
+        n.addEventListener('click', function () { fn(); });
+      });
+    }
+    bind('.module-card, [data-go], #quitPractice, #ruAgain', playNav);   // 切换页面 / 返回
+    bind('#startByPick, #startRandom, #startWeak, #zeDrillAgain, #ruBegin, #ruDrill', playStart);
+    bind('#submitBtn, #zeDrillSubmit, #ruSubmit', playSubmit);           // 提交作答
+    bind('#clearRec', playClear);                                        // 清空记录
+    /* 弹窗按钮（动态生成）：用捕获阶段，否则按钮自身的处理函数会先把弹窗清空 */
+    document.addEventListener('click', function (e) {
+      var t = e.target && e.target.closest && e.target.closest('#modalBox [data-x]');
+      if (t) playUi();
+    }, true);
   })();
 
 

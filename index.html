@@ -10,11 +10,27 @@
 <div class="top-bar">
   <span class="bar-hint">格律练习 · 古代汉语（二）· 建议按 F11 全屏</span>
   <span class="bar-hint-sm">格律练习</span>
-  <button class="trad-toggle" id="tradToggle" title="当前显示繁体（与考核卷一致），点击切换为简体" aria-label="繁简显示切换">
-    <span id="tradIcon">繁</span>
+</div>
+<!-- 右上角工具组：固定在页面右上角（不随滚动移动），与蓝色顶栏分开 -->
+<div class="tool-dock" id="toolDock" role="group" aria-label="显示与音效设置">
+  <button class="tool-btn tool-trad on" id="tradToggle" type="button" aria-pressed="true"
+          title="当前显示繁体（与考核卷一致），点击切换为简体">
+    <span class="tool-inner">
+      <span class="tool-glyph" id="tradIcon">繁</span>
+      <span class="tool-cap" id="tradCap">繁体</span>
+    </span>
   </button>
-  <button class="sound-toggle" id="soundToggle" title="音效开关" aria-label="音效开关">
-    <span id="soundIcon">🔊</span>
+  <button class="tool-btn tool-sound on" id="soundToggle" type="button" aria-pressed="true"
+          title="音效开：点击静音">
+    <span class="tool-inner">
+      <svg class="spk" viewBox="0 0 24 24" aria-hidden="true">
+        <path class="spk-body" d="M4 9.5h3.2L12 5.3v13.4l-4.8-4.2H4z"/>
+        <path class="spk-wave w1" d="M14.8 9.1a4.3 4.3 0 0 1 0 5.8"/>
+        <path class="spk-wave w2" d="M17.4 6.4a8.3 8.3 0 0 1 0 11.2"/>
+        <path class="spk-slash" d="M4.6 4.6l14.8 14.8"/>
+      </svg>
+      <span class="tool-cap" id="soundCap">音效</span>
+    </span>
   </button>
 </div>
 <div class="app">

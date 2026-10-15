@@ -50,7 +50,7 @@ body::before {
 }
 @keyframes bg-drift { from{transform:translate3d(-1.5%,-1%,0)} to{transform:translate3d(1.5%,1%,0)} }
 
-.app { max-width: 860px; margin: 0 auto; padding: 0 16px 40px; }
+.app { max-width: 860px; margin: 0 auto; padding: calc(var(--dock-bottom) - 36px + 6px) 16px 40px; }
 .page { display:none; animation: fade-in .3s ease both; }
 .page.active { display:block; }
 @keyframes fade-in { from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none} }
@@ -75,24 +75,86 @@ body::before {
   background: linear-gradient(135deg, var(--accent), var(--accent-dark));
   color: var(--bg-page); text-align: center; padding: 7px 16px;
   font-size: 13px; font-family: var(--sans); letter-spacing: .5px;
-  display: flex; align-items: center; justify-content: center; position: relative;
+  display: flex; align-items: center; justify-content: center;
 }
-.sound-toggle {
-  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-  background: none; border: none; cursor: pointer; font-size: 15px; line-height: 1;
-  padding: 4px 6px; border-radius: 6px; opacity: .85; transition: opacity .2s, background .2s;
-}
-.sound-toggle:hover { opacity: 1; background: color-mix(in srgb, #fff 15%, transparent); }
-.sound-toggle.off { opacity: .55; }
-.trad-toggle {
-  position: absolute; right: 40px; top: 50%; transform: translateY(-50%);
-  background: none; border: none; cursor: pointer; font-size: 14px; line-height: 1;
-  font-family: var(--serif, inherit); padding: 3px 6px; border-radius: 6px;
-  opacity: .85; transition: opacity .2s, background .2s;
-}
-.trad-toggle:hover { opacity: 1; background: color-mix(in srgb, #fff 15%, transparent); }
-.trad-toggle.off { opacity: .55; }
 .bar-hint-sm { display: none; }
+
+/* ---------- 右上角工具组（独立于顶栏色块，固定在页面右上角） ---------- */
+:root {
+  --dock-top: 46px;        /* 工具组上边（蓝条 36px + 10px） */
+  --dock-size: 46px;       /* 方形按钮边长 */
+  --dock-bottom: 110px;    /* 工具组下边（含边框）再留 4px 余量，页面内容/粘性标题栏都从这里开始 */
+}
+.tool-dock {
+  position: fixed; top: var(--dock-top); right: 14px; z-index: 30;
+  display: flex; gap: 8px; padding: 6px;
+  border-radius: 16px; border: 1px solid var(--border-light);
+  background: color-mix(in srgb, var(--bg-card) 94%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--text-primary) 12%, transparent);
+  animation: dock-in .42s cubic-bezier(.2,.7,.3,1) both;
+}
+@keyframes dock-in { from { opacity:0; transform: translateY(-10px); } to { opacity:1; transform:none; } }
+.tool-btn {
+  width: var(--dock-size); height: var(--dock-size);
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 12px; border: 1.5px solid var(--border-light);
+  background: var(--bg-card); color: var(--accent-dark);
+  font-family: inherit; cursor: pointer; position: relative; overflow: hidden;
+  transition: transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .22s,
+              background .22s, border-color .22s, color .22s;
+  animation: tool-in .46s cubic-bezier(.2,.7,.3,1) both;
+}
+.tool-dock .tool-btn:nth-child(2) { animation-delay: .07s; }
+@keyframes tool-in { from { opacity:0; transform: translateY(-8px); } to { opacity:1; transform:none; } }
+.tool-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 18px color-mix(in srgb, var(--text-primary) 16%, transparent); }
+.tool-btn:active { transform: scale(.94); }
+.tool-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tool-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.tool-glyph { font-family: var(--serif); font-size: 20px; line-height: 1; }
+.tool-cap { font-family: var(--sans); font-size: 9px; line-height: 1; letter-spacing: .04em; opacity: .72; }
+.spk { width: 21px; height: 21px; display: block; }
+.spk-body { fill: currentColor; }
+.spk-wave, .spk-slash { stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; fill: none; }
+.spk-wave { transition: opacity .22s ease, transform .22s ease; }
+.spk-slash { stroke-dasharray: 22; stroke-dashoffset: 22; transition: stroke-dashoffset .24s ease; }
+
+/* 繁简：石青配色（繁体=实心，简体=描边） */
+.tool-trad { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 42%, var(--border-light)); }
+.tool-trad.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.tool-trad.on .tool-cap { opacity: .9; }
+.tool-trad.flip .tool-glyph { animation: glyph-flip .3s cubic-bezier(.3,.7,.3,1); }
+@keyframes glyph-flip {
+  0%   { transform: rotateX(0); }
+  45%  { transform: rotateX(88deg); opacity: .12; }
+  100% { transform: rotateX(0); opacity: 1; }
+}
+
+/* 音效：金配色（开启=声波，静音=斜线） */
+.tool-sound { color: var(--accent-dark); border-color: color-mix(in srgb, var(--gold) 55%, var(--border-light)); }
+.tool-sound.off {
+  color: color-mix(in srgb, var(--text-primary) 62%, var(--bg-page));
+  border-color: var(--border-light);
+  background: color-mix(in srgb, var(--bg-card) 72%, var(--bg-page));
+}
+.tool-sound.off .tool-cap { opacity: .92; }
+.tool-sound.off .spk-wave { opacity: 0; transform: scale(.55); transform-origin: 50% 50%; }
+.tool-sound.off .spk-slash { stroke-dashoffset: 0; }
+/* 抖动作用在内容层，避免覆盖按钮自身的入场动画 */
+.tool-sound.shake .tool-inner { animation: tool-shake .34s ease; }
+@keyframes tool-shake {
+  0%, 100% { transform: rotate(0); }
+  30% { transform: rotate(-3.5deg); }
+  70% { transform: rotate(3.5deg); }
+}
+
+/* 点击涟漪（两个按钮通用） */
+.tool-btn.ripple::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.6), transparent 62%);
+  animation: tool-ripple .44s ease-out forwards;
+}
+@keyframes tool-ripple { from { opacity:.85; transform: scale(.5); } to { opacity:0; transform: scale(1.7); } }
 
 /* ---------- 首页 ---------- */
 .home-wrap { padding-top: 6vh; }
@@ -147,7 +209,7 @@ body::before {
 /* ---------- 顶栏 ---------- */
 .bar {
   display:flex; align-items:center; gap:12px; padding:16px 4px;
-  border-bottom:1px solid var(--border-light); margin-bottom:20px; position:sticky; top:0;
+  border-bottom:1px solid var(--border-light); margin-bottom:20px; position:sticky; top:var(--dock-bottom);
   background: color-mix(in srgb, var(--bg-page) 88%, transparent); backdrop-filter: blur(6px); z-index:20;
 }
 .bar h2 { font-family:var(--sans); font-size:19px; font-weight:700; letter-spacing:.06em; }
@@ -547,6 +609,12 @@ select:focus { border-color:var(--gold); }
   .bar-hint { display:none; }
   .bar-hint-sm { display:inline; }
   .top-bar { text-align:left; justify-content:flex-start; padding-left:12px; }
+  /* 工具组：窄屏收紧 */
+  :root { --dock-top: 42px; --dock-size: 40px; --dock-bottom: 98px; }
+  .tool-dock { right: 10px; gap: 6px; padding: 5px; border-radius: 14px; }
+  .tool-glyph { font-size: 17px; }
+  .tool-cap { font-size: 8px; }
+  .spk { width: 18px; height: 18px; }
   .module-grid { grid-template-columns:1fr; }
   .mode-wrap { grid-template-columns:1fr; }
   .site-head h1 { font-size:30px; }
