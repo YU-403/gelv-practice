@@ -593,6 +593,21 @@
     confirmModal('退出练习？', '当前进度将不会保存。', '退出', function () { go('mode'); });
   });
 
+  /* 入声练习页「返回」：与平仄侧一致 —— 先确认并立刻停表，确认退出后丢弃本题
+     （此前是直接 go('ruready')，计时器还在跑，读秒结束会强制批改并弹窗） */
+  el('ruQuit').addEventListener('click', function () {
+    confirmModal('退出练习？', '计时会停止，本次作答不会保存。', '退出', function () {
+      if (RU_STATE.timerId) { clearInterval(RU_STATE.timerId); RU_STATE.timerId = null; }
+      RU_STATE.items = [];
+      RU_STATE.sel = [];
+      RU_STATE.result = null;
+      RU_STATE.left = 0;
+      var t = el('ruTimer');
+      if (t) { t.hidden = true; t.classList.remove('warn'); t.textContent = ''; }
+      go('ruready');
+    });
+  });
+
   /* ---------- 渲染诗句 + 格子 ---------- */
   function renderPoem(noAnim) {
     var area = el('poemArea');
