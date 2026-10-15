@@ -73,6 +73,19 @@
   }
   function ruShow(it) { return TRAD_ON ? it.c : it.k; }   // 入声题面/批改：繁显时用繁体形
 
+  /* 入声/古仄今平/两读三个标记的取值。
+     繁体显示时以「显示字形」为准：简体一个字归并了两个不同的字时（只←隻/祇、蜡←蠟、
+     仆←僕 …），显示哪个字形就按哪个字形自身的韵书记载标注（trad.glyphFix）。
+     简体显示时仍按简体键口径，与数据层（rusheng/ruPool/ruDual）完全一致。 */
+  var GFIX = TRAD.glyphFix || {};
+  function ruFlags(key, glyph) {
+    if (TRAD_ON && glyph) {
+      var f = GFIX[glyph];
+      if (f) return { ru: !!f.ru, trap: !!f.trap, dual: !!f.dual };
+    }
+    return { ru: RU.has(key) || RU_TRAP.has(key), trap: RU_TRAP.has(key), dual: RU_DUAL.has(key) };
+  }
+
   function setTrad(on) {
     TRAD_ON = on;
     try { localStorage.setItem('gelv_trad', on ? 'on' : 'off'); } catch (e) {}
@@ -350,9 +363,10 @@
     return k === 'p' ? '平' : k === 'z' ? '仄' : '平/仄 两可';
   }
   function zeTags(ch) {
+    var f = ruFlags(ch, T(ch));
     var t = [];
-    if (RU.has(ch) || RU_TRAP.has(ch)) t.push('入声');
-    if (zeKey(ch) === 'pz' || RU_DUAL.has(ch)) t.push('两读');
+    if (f.ru) t.push('入声');
+    if (zeKey(ch) === 'pz' || f.dual) t.push('两读');
     return t.join('·');
   }
   function zeCell(i) { return document.querySelector('#zeGrid .cell[data-i="' + i + '"]'); }
@@ -663,10 +677,11 @@
   }
 
   /* ---------- 批改 ---------- */
-  function classify(ch, user, right) {
-    var dual = RU_DUAL.has(ch) ? '；另有非入声读法' : '';
-    if (RU_TRAP.has(ch)) return '古仄今平（入声）：今读平声，易误判' + dual;
-    if (RU.has(ch)) return '一般平仄（入声）：今读仍为仄声' + dual;
+  function classify(ch, glyph, user, right) {
+    var f = ruFlags(ch, glyph);
+    var dual = f.dual ? '；另有非入声读法' : '';
+    if (f.trap) return '古仄今平（入声）：今读平声，易误判' + dual;
+    if (f.ru) return '一般平仄（入声）：今读仍为仄声' + dual;
     return '一般平仄';
   }
 
@@ -754,21 +769,22 @@
       var seen = {}, list = [];
       state.poem.lines.forEach(function (line, li) {
         line.chars.forEach(function (ch, ci) {
-          if (!RU.has(ch) && !RU_TRAP.has(ch)) return;
           var d = TPoem(state.poem.id, li, ci, ch);   // 显示形按位置取（发/髮、干/乾/幹 …）
+          var f = ruFlags(ch, d);                     // 标注按显示字形取（只/隻、蜡/蠟 …）
+          if (!f.ru) return;
           var key = ch + '|' + d;
           if (seen[key]) return;
-          seen[key] = 1; list.push({ k: ch, d: d });
+          seen[key] = 1; list.push({ k: ch, d: d, f: f });
         });
       });
       if (!list.length) return;
       function mark(o) {          // 两读字：星标挪到该字右上角（上标）
-        return RU_DUAL.has(o.k)
+        return o.f.dual
           ? '<span class="rus-ch">' + o.d + '<i>*</i></span>' : o.d;
       }
-      var traps = list.filter(function (o) { return RU_TRAP.has(o.k); });
-      var rest = list.filter(function (o) { return !RU_TRAP.has(o.k); });
-      var hasDual = list.some(function (o) { return RU_DUAL.has(o.k); });
+      var traps = list.filter(function (o) { return o.f.trap; });
+      var rest = list.filter(function (o) { return !o.f.trap; });
+      var hasDual = list.some(function (o) { return o.f.dual; });
       var html = '<div class="rus-title">本诗入声字 <b>' + list.length + '</b> 个</div>';
       if (traps.length) {
         html += '<div class="rus-line"><span class="rus-label">古仄今平（入声）：</span>' +
@@ -815,15 +831,17 @@
         line.chars.forEach(function (ch, ci) {
           var wrap = document.createElement('div');
           wrap.className = 'ch';
+          var g = TPoem(state.poem.id, li, ci, ch);        // 显示字形
           var zi = document.createElement('span');
-          zi.className = 'zi'; zi.textContent = TPoem(state.poem.id, li, ci, ch);
+          zi.className = 'zi'; zi.textContent = g;
           var cell = document.createElement('div'); cell.className = 'cell';
           var right = line.tones[ci];
           var user = state.answers[li][ci];               // 本人作答：'' / '○' / '●'
           var e = errSet[li + '-' + ci];
-          var trap = RU_TRAP.has(ch);                     // 入声·今读平声（易误判）
-          var ruOnly = !trap && RU.has(ch);               // 入声·今读仍为仄
-          var dualTag = RU_DUAL.has(ch) ? '·两读' : '';
+          var f = ruFlags(ch, g);                         // 标注按显示字形取
+          var trap = f.trap;                              // 入声·今读平声（易误判）
+          var ruOnly = !f.trap && f.ru;                   // 入声·今读仍为仄
+          var dualTag = f.dual ? '·两读' : '';
           if (user === '') {                              // 未标：灰虚线 + 「空」
             cell.classList.add('blank');
             cell.textContent = '空';
@@ -889,13 +907,14 @@
       var errs = document.createElement('div');
       errs.className = 'errs';
       byLine[li].forEach(function (e) {
+        var g = TPoem(state.poem.id, e.li, e.ci, e.ch);   // 逐句清单也用显示字形
         var d = document.createElement('div');
         d.className = 'err-item';
         var yours = e.user === '' ? '未标' : (e.user === '○' ? '平' : '仄');
         var rights = e.right === '○' ? '平' : '仄';
-        d.innerHTML = '<span class="c">' + e.ch + '</span>' +
+        d.innerHTML = '<span class="c">' + g + '</span>' +
           '你标：<span class="you">' + yours + '</span> · 应为：<span class="right">' + rights + '</span>' +
-          '<span class="type">' + classify(e.ch, e.user, e.right) + '</span>';
+          '<span class="type">' + classify(e.ch, g, e.user, e.right) + '</span>';
         errs.appendChild(d);
       });
       box.appendChild(errs);
@@ -1227,7 +1246,7 @@
         b.className = 'ru-badge'; b.textContent = tag;
         d.appendChild(b);
       }
-      if (RU_DUAL.has(it.k)) {                 // 两读字：额外加角标
+      if (ruFlags(it.k, ruShow(it)).dual) {    // 两读字：额外加角标（按显示字形）
         d.classList.add('dual');
         var db = document.createElement('span');
         db.className = 'ru-badge dual-badge'; db.textContent = '两读';
@@ -1271,8 +1290,9 @@
       area.appendChild(box);
     }
     // 本轮出现的两读字：无论对错都说明（另有非入声读法，按口径仍算入声）
-    var dual = RU_STATE.items.filter(function (it) { return it.ru && RU_DUAL.has(it.k); })
-      .map(ruShow);
+    var dual = RU_STATE.items.filter(function (it) {
+      return it.ru && ruFlags(it.k, ruShow(it)).dual;
+    }).map(ruShow);
     if (dual.length) {
       var dn = document.createElement('div');
       dn.className = 'rline dual-note';
