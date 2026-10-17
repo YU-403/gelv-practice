@@ -1084,8 +1084,9 @@
   function hideModal() { el('modal').hidden = true; el('modalBox').innerHTML = ''; }
 
   /* ---------- 信息弹窗（依据与勘误 / 反馈二维码）：纯前端 ---------- */
-  function openPanel(html) {
+  function openPanel(html, extraClass) {
     var m = el('modal'), box = el('modalBox');
+    box.className = 'modal' + (extraClass ? ' ' + extraClass : '');
     box.innerHTML = html;
     m.hidden = false;
     function close() {
@@ -1145,7 +1146,8 @@
       '<div class="actions">' +
         '<button class="btn-ghost" data-x="close">关闭</button>' +
         '<button class="btn-primary" data-x="feedback">反馈与纠错</button>' +
-      '</div>'
+      '</div>',
+      'modal-wide'
     );
   }
 
