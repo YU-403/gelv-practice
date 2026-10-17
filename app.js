@@ -203,6 +203,7 @@
     bind('#startByPick, #startRandom, #startWeak, #zeDrillAgain, #ruBegin, #ruDrill', playStart);
     bind('#submitBtn, #zeDrillSubmit, #ruSubmit', playSubmit);           // 提交作答
     bind('#clearRec', playClear);                                        // 清空记录
+    bind('#feedbackBtn', playUi);                                        // 打开反馈弹窗
     /* 弹窗按钮（动态生成）：用捕获阶段，否则按钮自身的处理函数会先把弹窗清空 */
     document.addEventListener('click', function (e) {
       var t = e.target && e.target.closest && e.target.closest('#modalBox [data-x]');
@@ -1081,6 +1082,34 @@
     });
   }
   function hideModal() { el('modal').hidden = true; el('modalBox').innerHTML = ''; }
+
+  /* ---------- 反馈与纠错：二维码弹窗（纯前端，无网络请求） ---------- */
+  function openFeedback() {
+    var m = el('modal'), box = el('modalBox');
+    box.innerHTML =
+      '<h3>反馈与纠错</h3>' +
+      '<p class="fb-lead">微信扫一扫，填写使用体验，或指出诗句标注中的错误。</p>' +
+      '<div class="fb-main">' +
+        '<div class="fb-qr"><img src="assets/feedback_qr.jpg" alt="反馈问卷二维码" width="230" height="230"></div>' +
+        '<div class="fb-side">' +
+          '<a class="btn-ghost fb-open" href="https://v.wjx.cn/vm/O7082Oj.aspx" target="_blank" rel="noopener noreferrer">在手机上打开问卷</a>' +
+          '<p class="fb-hint">扫码不便时，直接点上方按钮即可打开问卷。</p>' +
+        '</div>' +
+      '</div>' +
+      '<div class="actions"><button class="btn-ghost" data-x="close">关闭</button></div>';
+    m.hidden = false;
+    function close() {
+      m.hidden = true; box.innerHTML = '';
+      document.removeEventListener('keydown', onKey, true);
+      m.removeEventListener('click', onOverlay);
+    }
+    function onKey(e) { if (e.key === 'Escape') close(); }
+    function onOverlay(e) { if (e.target === m) close(); }
+    document.addEventListener('keydown', onKey, true);
+    m.addEventListener('click', onOverlay);
+    box.querySelector('[data-x="close"]').addEventListener('click', close);
+  }
+  el('feedbackBtn').addEventListener('click', openFeedback);
 
   // ---- 计时暂停 / 恢复（按当前练习页分派；弹窗期间暂停）----
   function activePage() { var p = document.querySelector('.page.active'); return p ? p.id : ''; }

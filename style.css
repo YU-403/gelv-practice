@@ -205,6 +205,16 @@ body::before {
 .mc-desc { display:block; color:var(--text-secondary); font-size:13.5px; line-height:1.8; }
 .mc-meta { display:block; margin-top:16px; font-size:12px; color:var(--text-light); font-family:var(--sans); }
 .home-foot { text-align:center; color:var(--text-light); font-size:12px; margin-top:40px; letter-spacing:.08em; }
+.foot-dot { margin:0 8px; }
+.foot-feedback {
+  font-family:inherit; font-size:12px; letter-spacing:.08em; color:var(--accent);
+  background:none; border:0; padding:6px 8px; margin:-6px -8px; cursor:pointer;
+  text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:4px;
+  text-decoration-color:color-mix(in srgb, var(--accent) 45%, transparent);
+  transition:color .2s, text-decoration-color .2s;
+}
+.foot-feedback:hover { color:var(--accent-dark); text-decoration-color:currentColor; }
+.foot-feedback:focus-visible { outline:2px solid var(--gold); outline-offset:3px; border-radius:4px; }
 
 /* ---------- 顶栏 ---------- */
 .bar {
@@ -607,6 +617,18 @@ select:focus { border-color:var(--gold); }
 .modal p b { color:var(--text-primary); font-weight:700; }
 .modal .actions { display:flex; gap:12px; justify-content:center; margin-top:26px; }
 
+/* ---------- 反馈弹窗（二维码） ---------- */
+.fb-lead { margin-bottom:18px; }
+.fb-main { display:flex; flex-direction:column; align-items:center; gap:14px; }
+.fb-qr {
+  display:flex; padding:10px; background:#fff; border:1px solid var(--border); border-radius:12px;
+  box-shadow:0 8px 22px color-mix(in srgb, var(--text-primary) 10%, transparent);
+}
+.fb-qr img { display:block; width:230px; height:230px; object-fit:contain; }
+.fb-side { display:flex; flex-direction:column; align-items:center; gap:8px; }
+.fb-open { display:inline-flex; align-items:center; justify-content:center; text-decoration:none; }
+.fb-hint { font-size:12.5px !important; color:var(--text-light) !important; line-height:1.7 !important; }
+
 /* ---------- 响应式 ---------- */
 @media (max-width: 640px) {
   /* 顶栏右侧有两个按钮：窄屏只留短标题，避免文字与按钮相撞 */
@@ -642,6 +664,9 @@ select:focus { border-color:var(--gold); }
   .ze-item .ze-ch { font-size:22px; }
   .select-row { flex-direction:column; }
   .result-actions { flex-direction:column; }
+  /* 反馈弹窗：手机上先给可点链接，再给二维码 */
+  .fb-main { flex-direction:column-reverse; }
+  .fb-qr img { width:min(62vw, 220px); height:auto; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; }
