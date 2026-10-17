@@ -591,6 +591,7 @@ select:focus { border-color:var(--gold); }
 .modal {
   background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:30px 28px;
   max-width:min(88vw, 520px); width:100%; text-align:center;
+  max-height:calc(100vh - 40px); overflow-y:auto; overscroll-behavior:contain;
   box-shadow:0 16px 48px color-mix(in srgb, var(--text-primary) 15%, transparent);
   animation: modal-in .28s ease both;
 }
