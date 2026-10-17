@@ -515,7 +515,7 @@ select:focus { border-color:var(--gold); }
 .review-legend .i-bad   { border-color:var(--error); background:var(--error-bg); }
 .review-legend .i-blank { border-style:dashed; border-color:var(--text-light); background:var(--bg-page); }
 /* 入声：15 字网格对照（✓对 / 漏=漏选 / 误=误选 / 灰=正确排除） */
-.review-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; max-width:460px; margin:22px auto 8px; }
+.review-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; width:100%; max-width:460px; margin:22px auto 8px; }
 .review-grid .ru-ch { position:relative; pointer-events:none; }
 .ru-ch.miss { border-style:dashed; border-color:var(--error); background:var(--error-bg); color:var(--error); }
 .ru-ch.neutral { color:var(--text-light); background:var(--bg-page); }
@@ -570,14 +570,14 @@ select:focus { border-color:var(--gold); }
 .ru-wrap { padding-top: 8px; text-align: center; }
 .ru-wrap .practice-sub b { color: var(--error); }
 .ru-grid {
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px;
   max-width: 460px; margin: 6px auto 8px;
 }
 .ru-ch {
   font-family: var(--kai); font-size: 30px; color: var(--text-primary);
   background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px;
   padding: 14px 0; cursor: pointer; transition: .15s; aspect-ratio: 1/1;
-  display: flex; align-items: center; justify-content: center;
+  display: flex; align-items: center; justify-content: center; min-width: 0;
 }
 .ru-ch:hover { border-color: var(--gold); transform: translateY(-2px); }
 .ru-ch.selected { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); font-weight: 600; }
@@ -684,6 +684,20 @@ select:focus { border-color:var(--gold); }
   .ze-item .ze-ch { font-size:22px; }
   .select-row { flex-direction:column; }
   .result-actions { flex-direction:column; }
+  /* 入声 5 列网格：窄屏收紧，避免列宽被字号与内边距撑破 */
+  .ru-grid, .review-grid { gap:clamp(6px, 2vw, 10px); }
+  .ru-ch {
+    font-size:clamp(22px, 6.2vw, 28px);
+    padding:clamp(6px, 1.8vw, 12px) 0;
+    border-radius:8px;
+  }
+  /* 批改页：角标收进格子内，避免相邻格碰撞与右侧越界 */
+  .review-grid { padding:6px 8px 0; }
+  .review-grid .ru-badge {
+    top:2px; right:2px; min-width:15px; height:15px; padding:0 3px;
+    font-size:9.5px; border-radius:8px;
+  }
+  .review-grid .ru-ch.dual .dual-badge { top:auto; bottom:2px; left:2px; }
   /* 反馈弹窗：手机上先给可点链接，再给二维码 */
   .fb-main { flex-direction:column-reverse; }
   .fb-qr img { width:min(62vw, 220px); height:auto; }
