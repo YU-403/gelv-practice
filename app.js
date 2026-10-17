@@ -332,6 +332,7 @@
   function findPoem(id) { return DATA.poems.find(function (p) { return p.id === id; }); }
 
   /* ---------- 自定义下拉（美化 select；原 select 保留为数据源） ---------- */
+  var PICKER_CLOSERS = [];   // 同一页面只允许一个下拉展开
   function enhancePicker(selId, hostId) {
     var sel = el(selId);
     var host = el(hostId);
@@ -392,8 +393,13 @@
         o.classList.toggle('selected', o.dataset.value === sel.value);
       });
     }
-    function open() { host.classList.add('open'); trigger.setAttribute('aria-expanded', 'true'); }
+    function open() {
+      PICKER_CLOSERS.forEach(function (fn) { if (fn !== close) fn(); });
+      host.classList.add('open');
+      trigger.setAttribute('aria-expanded', 'true');
+    }
     function close() { host.classList.remove('open'); trigger.setAttribute('aria-expanded', 'false'); }
+    PICKER_CLOSERS.push(close);
     trigger.addEventListener('click', function (e) {
       e.stopPropagation();
       if (host.classList.contains('open')) close(); else open();
