@@ -50,7 +50,7 @@ body::before {
 }
 @keyframes bg-drift { from{transform:translate3d(-1.5%,-1%,0)} to{transform:translate3d(1.5%,1%,0)} }
 
-.app { max-width: 860px; margin: 0 auto; padding: 0 16px 40px; }
+.app { max-width: 860px; margin: 0 auto; padding: 0 16px 40px; overflow-x: clip; }
 .page { display:none; animation: fade-in .3s ease both; }
 .page.active { display:block; }
 @keyframes fade-in { from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none} }
@@ -73,7 +73,8 @@ body::before {
 /* ---------- 顶部提示条 ---------- */
 .top-bar {
   background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-  color: var(--bg-page); text-align: center; padding: 7px 16px;
+  color: var(--bg-page); text-align: center; width: 100%;
+  padding: 7px max(16px, env(safe-area-inset-right)) 7px max(16px, env(safe-area-inset-left));
   font-size: 13px; font-family: var(--sans); letter-spacing: .5px;
   display: flex; align-items: center; justify-content: center;
 }
@@ -113,6 +114,22 @@ body::before {
 .tool-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
 .tool-glyph { font-family: var(--serif); font-size: 20px; line-height: 1; }
 .tool-cap { font-family: var(--sans); font-size: 9px; line-height: 1; letter-spacing: .04em; opacity: .72; }
+
+/* 手机端：工具组收起为一个「设置」按钮（桌面端隐藏） */
+.tool-more {
+  display: none; position: fixed; top: var(--dock-top); right: 14px; z-index: 31;
+  width: var(--dock-size); height: var(--dock-size);
+  align-items: center; justify-content: center;
+  border-radius: 12px; border: 1.5px solid var(--border-light);
+  background: var(--bg-card); color: var(--accent-dark);
+  font-family: inherit; cursor: pointer;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--text-primary) 12%, transparent);
+  transition: transform .18s, box-shadow .22s, background .22s, border-color .22s;
+}
+.tool-more:hover { transform: translateY(-2px); border-color: var(--gold); }
+.tool-more:active { transform: scale(.94); }
+.tool-more:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tool-more[aria-expanded="true"] { border-color: var(--gold); background: var(--bg-card-hover); }
 .spk { width: 21px; height: 21px; display: block; }
 .spk-body { fill: currentColor; }
 .spk-wave, .spk-slash { stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; fill: none; }
@@ -654,15 +671,28 @@ select:focus { border-color:var(--gold); }
   /* 顶栏右侧有两个按钮：窄屏只留短标题，避免文字与按钮相撞 */
   .bar-hint { display:none; }
   .bar-hint-sm { display:inline; }
-  .top-bar { text-align:left; justify-content:flex-start; padding-left:12px; }
+  .top-bar {
+    text-align:left; justify-content:flex-start;
+    padding-left:max(12px, env(safe-area-inset-left));
+    padding-right:max(12px, env(safe-area-inset-right));
+  }
   /* 工具组：窄屏收紧 */
   :root { --dock-top: 42px; --dock-size: 40px; --dock-bottom: 98px; }
-  .tool-dock { right: 10px; gap: 6px; padding: 5px; border-radius: 14px; }
+  /* 手机端只留一个「设置」按钮；展开时工具组从左侧滑出 */
+  .tool-more { display:flex; right:10px; }
+  .tool-dock {
+    top: calc(var(--dock-top) + var(--dock-size) + 8px); right:10px;
+    flex-direction: column; gap:6px; padding:5px; border-radius:14px;
+    opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(-6px);
+    animation: none;
+    transition: opacity .2s ease, transform .2s ease, visibility .2s;
+  }
+  .tool-dock.open { opacity:1; visibility:visible; pointer-events:auto; transform:none; }
   .tool-glyph { font-size: 17px; }
   .tool-cap { font-size: 8px; }
   .spk { width: 18px; height: 18px; }
   /* 窄屏：标题栏要同时放下 返回/标题/倒计时/工具组，收紧标题栏内元素 */
-  .bar { gap: 8px; }
+  .bar { gap: 8px; padding-right: calc(var(--dock-size) + 24px); }
   .bar h2 { font-size: 16px; }
   .tb-label { display: none; }        /* 省掉「剩余」二字 */
   .timer { font-size: 20px; }
@@ -698,6 +728,8 @@ select:focus { border-color:var(--gold); }
     font-size:9.5px; border-radius:8px;
   }
   .review-grid .ru-ch.dual .dual-badge { top:auto; bottom:2px; left:2px; }
+  /* 手机端取消横向滑入，避免撑宽布局视口 */
+  .page.active.from-right, .page.active.from-left { animation: fade-in .3s ease both; }
   /* 反馈弹窗：手机上先给可点链接，再给二维码 */
   .fb-main { flex-direction:column-reverse; }
   .fb-qr img { width:min(62vw, 220px); height:auto; }

@@ -204,6 +204,7 @@
     bind('#submitBtn, #zeDrillSubmit, #ruSubmit', playSubmit);           // 提交作答
     bind('#clearRec', playClear);                                        // 清空记录
     bind('#basisBtn, #feedbackBtn', playUi);                             // 打开说明 / 反馈弹窗
+    bind('#toolMore', playToggle);                                       // 展开 / 收起工具组
     /* 弹窗按钮（动态生成）：用捕获阶段，否则按钮自身的处理函数会先把弹窗清空 */
     document.addEventListener('click', function (e) {
       var t = e.target && e.target.closest && e.target.closest('#modalBox [data-x]');
@@ -263,6 +264,27 @@
 
 
   var el = function (id) { return document.getElementById(id); };
+
+  /* ---------- 手机端工具组：收起为一个「设置」按钮 ---------- */
+  var toolMoreBtn = el('toolMore'), toolDockEl = el('toolDock');
+  function setToolMenu(open) {
+    if (!toolMoreBtn || !toolDockEl) return;
+    toolDockEl.classList.toggle('open', open);
+    toolMoreBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  if (toolMoreBtn && toolDockEl) {
+    toolMoreBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      setToolMenu(!toolDockEl.classList.contains('open'));
+    });
+    document.addEventListener('click', function (e) {
+      if (!toolDockEl.contains(e.target) && !toolMoreBtn.contains(e.target)) setToolMenu(false);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') setToolMenu(false);
+    });
+  }
+
   var state = {
     poem: null, answers: [], timed: false, left: 0, timerId: null, result: null,
     cursor: { li: 0, ci: 0 },          // 键盘作答的当前格
@@ -273,6 +295,7 @@
                      result: 3, ruresult: 3, zedrillresult: 3 };
   var curLevel = 0;
   function go(page) {
+    setToolMenu(false);
     if (state.timerId) { clearInterval(state.timerId); state.timerId = null; }
     var lvl = PAGE_LEVEL[page] != null ? PAGE_LEVEL[page] : 0;
     var dir = lvl > curLevel ? 'from-right' : (lvl < curLevel ? 'from-left' : '');
