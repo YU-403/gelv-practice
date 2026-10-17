@@ -204,11 +204,14 @@ body::before {
 .mc-name { display:block; font-family:var(--sans); font-size:18px; font-weight:700; margin-bottom:10px; color:var(--text-primary); }
 .mc-desc { display:block; color:var(--text-secondary); font-size:13.5px; line-height:1.8; }
 .mc-meta { display:block; margin-top:16px; font-size:12px; color:var(--text-light); font-family:var(--sans); }
-.home-foot { text-align:center; color:var(--text-light); font-size:12px; margin-top:40px; letter-spacing:.08em; }
-.foot-dot { margin:0 8px; }
+.home-foot {
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:center;
+  column-gap:14px; row-gap:2px; text-align:center;
+  color:var(--text-light); font-size:12px; margin-top:40px; letter-spacing:.08em;
+}
 .foot-feedback {
   font-family:inherit; font-size:12px; letter-spacing:.08em; color:var(--accent);
-  background:none; border:0; padding:6px 8px; margin:-6px -8px; cursor:pointer;
+  background:none; border:0; padding:6px 8px; margin:-6px 0; cursor:pointer;
   text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:4px;
   text-decoration-color:color-mix(in srgb, var(--accent) 45%, transparent);
   transition:color .2s, text-decoration-color .2s;
@@ -629,6 +632,20 @@ select:focus { border-color:var(--gold); }
 .fb-side { display:flex; flex-direction:column; align-items:center; gap:8px; }
 .fb-open { display:inline-flex; align-items:center; justify-content:center; text-decoration:none; }
 .fb-hint { font-size:12.5px !important; color:var(--text-light) !important; line-height:1.7 !important; }
+
+/* ---------- 依据与勘误弹窗 ---------- */
+.basis { text-align:left; }
+.basis h4 {
+  font-family:var(--sans); font-size:14.5px; font-weight:700; letter-spacing:.04em;
+  color:var(--text-primary); margin:16px 0 6px;
+}
+.basis h4:first-child { margin-top:2px; }
+.basis p { font-size:14px; line-height:1.85; }
+.basis ol { margin:2px 0 0; padding-left:1.35em; }
+.basis li { font-size:13.5px; line-height:1.8; color:var(--text-secondary); margin-bottom:6px; }
+.basis li:last-child { margin-bottom:0; }
+.basis b { color:var(--text-primary); }
+.basis-ver { margin-top:14px !important; font-size:12px !important; color:var(--text-light) !important; }
 
 /* ---------- 响应式 ---------- */
 @media (max-width: 640px) {

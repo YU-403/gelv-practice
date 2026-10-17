@@ -203,7 +203,7 @@
     bind('#startByPick, #startRandom, #startWeak, #zeDrillAgain, #ruBegin, #ruDrill', playStart);
     bind('#submitBtn, #zeDrillSubmit, #ruSubmit', playSubmit);           // 提交作答
     bind('#clearRec', playClear);                                        // 清空记录
-    bind('#feedbackBtn', playUi);                                        // 打开反馈弹窗
+    bind('#basisBtn, #feedbackBtn', playUi);                             // 打开说明 / 反馈弹窗
     /* 弹窗按钮（动态生成）：用捕获阶段，否则按钮自身的处理函数会先把弹窗清空 */
     document.addEventListener('click', function (e) {
       var t = e.target && e.target.closest && e.target.closest('#modalBox [data-x]');
@@ -1083,20 +1083,10 @@
   }
   function hideModal() { el('modal').hidden = true; el('modalBox').innerHTML = ''; }
 
-  /* ---------- 反馈与纠错：二维码弹窗（纯前端，无网络请求） ---------- */
-  function openFeedback() {
+  /* ---------- 信息弹窗（依据与勘误 / 反馈二维码）：纯前端 ---------- */
+  function openPanel(html) {
     var m = el('modal'), box = el('modalBox');
-    box.innerHTML =
-      '<h3>反馈与纠错</h3>' +
-      '<p class="fb-lead">微信扫一扫，填写使用体验，或指出诗句标注中的错误。</p>' +
-      '<div class="fb-main">' +
-        '<div class="fb-qr"><img src="assets/feedback_qr.jpg" alt="反馈问卷二维码" width="230" height="230"></div>' +
-        '<div class="fb-side">' +
-          '<a class="btn-ghost fb-open" href="https://v.wjx.cn/vm/O7082Oj.aspx" target="_blank" rel="noopener noreferrer">在手机上打开问卷</a>' +
-          '<p class="fb-hint">扫码不便时，直接点上方按钮即可打开问卷。</p>' +
-        '</div>' +
-      '</div>' +
-      '<div class="actions"><button class="btn-ghost" data-x="close">关闭</button></div>';
+    box.innerHTML = html;
     m.hidden = false;
     function close() {
       m.hidden = true; box.innerHTML = '';
@@ -1107,8 +1097,59 @@
     function onOverlay(e) { if (e.target === m) close(); }
     document.addEventListener('keydown', onKey, true);
     m.addEventListener('click', onOverlay);
-    box.querySelector('[data-x="close"]').addEventListener('click', close);
+    Array.prototype.forEach.call(box.querySelectorAll('[data-x]'), function (b) {
+      b.addEventListener('click', function () {
+        var x = b.getAttribute('data-x');
+        close();
+        if (x === 'feedback') openFeedback();
+      });
+    });
   }
+
+  function openFeedback() {
+    openPanel(
+      '<h3>反馈与纠错</h3>' +
+      '<p class="fb-lead">微信扫一扫，填写使用体验，或指出诗句标注中的错误。</p>' +
+      '<div class="fb-main">' +
+        '<div class="fb-qr"><img src="assets/feedback_qr.jpg" alt="反馈问卷二维码" width="230" height="230"></div>' +
+        '<div class="fb-side">' +
+          '<a class="btn-ghost fb-open" href="https://v.wjx.cn/vm/O7082Oj.aspx" target="_blank" rel="noopener noreferrer">在手机上打开问卷</a>' +
+          '<p class="fb-hint">扫码不便时，直接点上方按钮即可打开问卷。</p>' +
+        '</div>' +
+      '</div>' +
+      '<div class="actions"><button class="btn-ghost" data-x="close">关闭</button></div>'
+    );
+  }
+
+  /* 题库版本：每次更新题库或勘误后手动改这里 */
+  var DATA_VERSION = '2026-10-17';
+  function openBasis() {
+    openPanel(
+      '<h3>依据与勘误</h3>' +
+      '<div class="basis">' +
+        '<h4>一、底本与参校</h4>' +
+        '<p>诗题、诗句与平仄标注依据喻守真《唐诗三百首详析》（2005 年 9 月第 2 版）；单字平仄、两读及入声判定，另参校《平水韵》（佩文韵府）。</p>' +
+        '<h4>二、录入与校验</h4>' +
+        '<p>依据书影人工录入，逐字校对，并与韵书交叉核对。题库现含七律 37 首、七古 16 段，共 53 个练习单元；入声练习使用 281 个常用入声字。</p>' +
+        '<h4>三、已知差异</h4>' +
+        '<ol>' +
+          '<li><b>印本差异</b>：同一著作的不同版次或印次，可能存在个别字形、符号差异；遇有疑问处，本练习依据韵书与上下文校正。</li>' +
+          '<li><b>两读字</b>：本练习按“有入声读法即计入声（仄）”处理，这是练习规则，不是标注错误。</li>' +
+          '<li><b>繁简字形</b>：繁体界面按实际显示的字形给标注，个别字（如「只 / 隻」）可能与简体界面的归属不同。</li>' +
+          '<li><b>提取误差</b>：录入与识别环节仍可能存在疏漏。</li>' +
+        '</ol>' +
+        '<h4>四、勘误与反馈</h4>' +
+        '<p>若发现某字与你的本子不一致，请提交篇目、句序和字；核实后会修正题库并更新页面版本。</p>' +
+        '<p class="basis-ver">题库版本：' + DATA_VERSION + '</p>' +
+      '</div>' +
+      '<div class="actions">' +
+        '<button class="btn-ghost" data-x="close">关闭</button>' +
+        '<button class="btn-primary" data-x="feedback">反馈与纠错</button>' +
+      '</div>'
+    );
+  }
+
+  el('basisBtn').addEventListener('click', openBasis);
   el('feedbackBtn').addEventListener('click', openFeedback);
 
   // ---- 计时暂停 / 恢复（按当前练习页分派；弹窗期间暂停）----
