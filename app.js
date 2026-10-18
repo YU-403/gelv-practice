@@ -4,6 +4,7 @@
 (function () {
   'use strict';
   var DATA = window.GELV_DATA || { poems: [], rusheng: [] };
+  var DATA_VERSION = '2026-10-18';
 
   /* ---------- 音效（Web Audio 合成，无音频文件） ---------- */
   var audioCtx = null;
@@ -1147,8 +1148,6 @@
     );
   }
 
-  /* 题库版本：每次更新题库或勘误后手动改这里 */
-  var DATA_VERSION = '2026-10-17';
   function openBasis() {
     openPanel(
       '<h3>依据与勘误</h3>' +
@@ -1156,7 +1155,7 @@
         '<h4>一、底本与参校</h4>' +
         '<p>诗题、诗句与平仄标注依据喻守真《唐诗三百首详析》（2005 年 9 月第 2 版）；单字平仄、两读及入声判定，另参校《平水韵》（佩文韵府）。</p>' +
         '<h4>二、录入与校验</h4>' +
-        '<p>依据书影人工录入，逐字校对，并与韵书交叉核对。题库现含七律 37 首、七古 16 段，共 53 个练习单元；入声练习使用 281 个常用入声字。</p>' +
+        '<p>依据书影人工录入，逐字校对，并与韵书交叉核对。题库现含七律 37 首、七古 27 段，共 64 个练习单元；入声练习使用 281 个常用入声字。</p>' +
         '<h4>三、已知差异</h4>' +
         '<ol>' +
           '<li><b>印本差异</b>：同一著作的不同版次或印次，可能存在个别字形、符号差异；遇有疑问处，本练习依据韵书与上下文校正。</li>' +
@@ -1530,6 +1529,13 @@
 
 
   /* ---------- 初始化 ---------- */
+  try {
+    if (localStorage.getItem('gelv_bag_version') !== DATA_VERSION) {
+      localStorage.removeItem('gelv_bag');
+      localStorage.setItem('gelv_bag_version', DATA_VERSION);
+    }
+  } catch (e) {}
+
   function fillMeta() {
     var np = DATA.poems.length;
     var byCat = {};
